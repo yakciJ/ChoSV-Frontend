@@ -8,6 +8,7 @@ import {
     Bell,
     ChevronDown,
     TextAlignJustify,
+    User,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -88,7 +89,7 @@ export default function UserLayout() {
                     </Link>
                     <button className="flex items-center bg-gray-100 gap-2 px-3 py-2 rounded-full hover:bg-gray-100 transition">
                         {/* Avatar */}
-                        {user.avatarUrl ? (
+                        {user?.avatarUrl ? (
                             <img
                                 src={user.avatarUrl}
                                 alt="User Avatar"
