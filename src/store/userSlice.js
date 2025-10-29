@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import * as userService from "../services/userService";
+import * as authService from "../services/authService";
 
 // Lấy thông tin user
 export const fetchCurrentUser = createAsyncThunk(
@@ -17,11 +18,55 @@ export const fetchCurrentUser = createAsyncThunk(
 
 export const loginUser = createAsyncThunk(
     "user/loginUser",
-    async (credentials) => {
-        const response = await userService.login(credentials);
-        localStorage.setItem("access_token", response.accessToken);
-        localStorage.setItem("userName", response.userName);
-        return response;
+    async (credentials, { rejectWithValue }) => {
+        try {
+            console.log("Attempting login with:", credentials); // Debug log
+            const response = await authService.login(credentials);
+            console.log("Login response received:", response); // Debug log
+
+            // Check if response exists and has the expected structure
+            if (!response) {
+                console.error("No response received from login API");
+                throw new Error("No response received from server");
+            }
+
+            if (!response.accessToken) {
+                console.error("No accessToken in response:", response);
+                throw new Error("Invalid response: missing access token");
+            }
+
+            if (!response.userName) {
+                console.error("No userName in response:", response);
+                throw new Error("Invalid response: missing username");
+            }
+
+            console.log("Login successful, storing tokens..."); // Debug log
+            localStorage.setItem("access_token", response.accessToken);
+            localStorage.setItem("userName", response.userName);
+
+            return response;
+        } catch (error) {
+            console.error("Login error:", error); // Debug log
+
+            // Handle axios errors specifically
+            if (error.response) {
+                // Server responded with error status
+                return rejectWithValue(
+                    error.response.data?.error ||
+                        `Lỗi máy chủ: ${error.response.status}`
+                );
+            } else if (error.request) {
+                // Network error
+                return rejectWithValue(
+                    "Lỗi mạng: Không thể kết nối đến máy chủ"
+                );
+            } else {
+                // Other errors
+                return rejectWithValue(
+                    error.message || "Đã xảy ra lỗi không xác định"
+                );
+            }
+        }
     }
 );
 
@@ -48,6 +93,16 @@ const userSlice = createSlice({
         clearError: (state) => {
             state.error = null;
         },
+        initializeAuth: (state) => {
+            const token = localStorage.getItem("access_token");
+            const userName = localStorage.getItem("userName");
+
+            if (token && userName) {
+                state.isAuthenticated = true;
+                // Optionally set basic user info from localStorage
+                state.info = { userName };
+            }
+        },
     },
     extraReducers: (builder) => {
         builder
@@ -64,7 +119,7 @@ const userSlice = createSlice({
                 state.loading = false;
                 state.info = null;
                 state.isAuthenticated = false;
-                state.error = action.error.message;
+                state.error = action.payload;
             })
 
             // LOGIN
@@ -76,10 +131,12 @@ const userSlice = createSlice({
                 state.loading = false;
                 state.info = action.payload;
                 state.isAuthenticated = true;
+                state.error = null;
             })
             .addCase(loginUser.rejected, (state, action) => {
                 state.loading = false;
-                state.error = action.error.message;
+                state.error = action.payload;
+                state.isAuthenticated = false;
             })
 
             // UPDATE
@@ -88,7 +145,7 @@ const userSlice = createSlice({
             })
             .addCase(updateUser.fulfilled, (state, action) => {
                 state.loading = false;
-                state.info = action.payload; // Cập nhật lại user
+                state.info = action.payload;
             })
             .addCase(updateUser.rejected, (state, action) => {
                 state.loading = false;
@@ -97,5 +154,5 @@ const userSlice = createSlice({
     },
 });
 
-export const { logout } = userSlice.actions;
+export const { logout, clearError, initializeAuth } = userSlice.actions;
 export default userSlice.reducer;

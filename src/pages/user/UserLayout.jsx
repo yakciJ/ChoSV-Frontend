@@ -12,7 +12,8 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchCurrentUser } from "../../store/userSlice";
+import { fetchCurrentUser, initializeAuth } from "../../store/userSlice";
+import { useNavigate } from "react-router-dom";
 
 export default function UserLayout() {
     const [query, setQuery] = useState("");
@@ -20,10 +21,21 @@ export default function UserLayout() {
     const { info: user, isAuthenticated } = useSelector((state) => state.user);
 
     useEffect(() => {
+        // Initialize auth state from localStorage
+        dispatch(initializeAuth());
+    }, [dispatch]);
+
+    useEffect(() => {
         if (isAuthenticated && !user) {
             dispatch(fetchCurrentUser());
         }
     }, [dispatch, isAuthenticated, user]);
+
+    const navigate = useNavigate();
+
+    const handleLogin = () => {
+        navigate("/login");
+    };
 
     return (
         <div className="min-h-screen w-full bg-blue-100 flex flex-col">
@@ -87,24 +99,31 @@ export default function UserLayout() {
                     >
                         Đăng tin
                     </Link>
-                    <button className="flex items-center bg-gray-100 gap-2 px-3 py-2 rounded-full hover:bg-gray-100 transition">
-                        {/* Avatar */}
-                        {user?.avatarUrl ? (
-                            <img
-                                src={user.avatarUrl}
-                                alt="User Avatar"
-                                className="w-8 h-8 rounded-full object-cover"
-                            />
-                        ) : (
-                            <User className="w-8 h-8 text-gray-500 bg-gray-200 rounded-full p-1" />
-                        )}
-                        {/* Tên người dùng */}
-                        <span className="font-medium text-gray-800 hidden sm:block">
-                            Jickay
-                        </span>
-                        {/* Mũi tên chỉ xuống */}
-                        <ChevronDown className="w-4 h-4 text-gray-600" />
-                    </button>
+                    {/* Avatar */}
+                    {isAuthenticated ? (
+                        <button className="flex items-center bg-gray-100 gap-2 px-3 py-2 rounded-full hover:bg-gray-100 transition">
+                            {user?.avatarUrl ? (
+                                <img
+                                    src={user.avatarUrl}
+                                    alt="User Avatar"
+                                    className="w-8 h-8 rounded-full object-cover"
+                                />
+                            ) : (
+                                <User className="w-8 h-8 text-gray-500 bg-gray-200 rounded-full p-1" />
+                            )}
+                            <span className="font-medium text-gray-800 hidden sm:block">
+                                {user?.fullName ? user.fullName : user.userName}
+                            </span>
+                            <ChevronDown className="w-4 h-4 text-gray-600" />
+                        </button>
+                    ) : (
+                        <button
+                            onClick={handleLogin}
+                            className="flex items-center bg-gray-800 gap-2 px-3 py-2 rounded-full hover:bg-blue-400 transition"
+                        >
+                            <span className="text-white">Đăng nhập</span>
+                        </button>
+                    )}
                 </div>
             </header>
             <main className="flex-1">
