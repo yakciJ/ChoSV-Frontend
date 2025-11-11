@@ -16,9 +16,7 @@ export default function Login() {
 
     const dispatch = useDispatch();
     const navigate = useNavigate();
-    const { loading, error, isAuthenticated } = useSelector(
-        (state) => state.user
-    );
+    const { loading, error } = useSelector((state) => state.user);
 
     // Clear error when component mounts
     useEffect(() => {
