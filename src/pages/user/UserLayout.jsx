@@ -75,7 +75,7 @@ export default function UserLayout() {
 
     return (
         <div className="min-h-screen w-full bg-blue-100 flex flex-col">
-            <header className="fixed top-0 left-0 right-0 bg-white flex-row flex p-3 items-center justify-between z-50">
+            <header className="sticky top-0 left-0 right-0 bg-white flex-row flex p-3 items-center justify-between z-50">
                 <TextAlignJustify
                     className="ml-[1vw] flex-shrink-0 text-black"
                     size={22}
