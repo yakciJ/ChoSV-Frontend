@@ -1,4 +1,5 @@
 import axiosInstance from "./axiosInstance";
+import axios from "axios";
 
 const url = "/api/User/";
 
@@ -15,7 +16,12 @@ export const logout = async () => {
     const response = await axiosInstance.post(`${url}logout`);
     return response;
 };
+const axiosNoAuth = axios.create({
+    baseURL: import.meta.env.VITE_BACKEND_URL,
+    withCredentials: true,
+});
+
 export const refreshToken = async () => {
-    const response = await axiosInstance.post(`${url}refresh-token`);
-    return response;
+    const { data } = await axiosNoAuth.get("/api/User/refreshToken");
+    return data;
 };

@@ -47,16 +47,18 @@ instance.interceptors.response.use(
                 // Queue the request while refreshing
                 return new Promise((resolve, reject) => {
                     failedQueue.push({ resolve, reject });
-                }).then(() => {
-                    // Retry with new token
-                    const newToken = localStorage.getItem("access_token");
-                    if (newToken) {
-                        originalRequest.headers.Authorization = `Bearer ${newToken}`;
-                    }
-                    return instance(originalRequest);
-                }).catch(err => {
-                    return Promise.reject(err);
-                });
+                })
+                    .then(() => {
+                        // Retry with new token
+                        const newToken = localStorage.getItem("access_token");
+                        if (newToken) {
+                            originalRequest.headers.Authorization = `Bearer ${newToken}`;
+                        }
+                        return instance(originalRequest);
+                    })
+                    .catch((err) => {
+                        return Promise.reject(err);
+                    });
             }
 
             originalRequest._retry = true;
@@ -64,13 +66,12 @@ instance.interceptors.response.use(
 
             try {
                 // Import refreshToken here to avoid circular dependency
-                const { refreshToken } = await import('../services/authService');
-                
-                // Use your existing refreshToken method
-                const refreshResponse = await refreshToken();
-                
+                const { refreshToken } = await import(
+                    "../services/authService"
+                );
+
                 // Update access token in localStorage
-                const newAccessToken = refreshResponse.accessToken;
+                const newAccessToken = await refreshToken(); // refreshToken trả về string luôn
                 localStorage.setItem("access_token", newAccessToken);
 
                 // Process queued requests
@@ -79,7 +80,6 @@ instance.interceptors.response.use(
                 // Retry original request with new token
                 originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
                 return instance(originalRequest);
-
             } catch (refreshError) {
                 // Refresh failed - clear token and handle based on request type
                 localStorage.clear();
@@ -87,10 +87,10 @@ instance.interceptors.response.use(
                     window.__store.dispatch({ type: "RESET_STORE" });
                 }
                 processQueue(refreshError, null);
-                
+
                 // Only redirect if not an optional request
                 if (!originalRequest.skipAuthRedirect) {
-                    window.location.href = '/login';
+                    //window.location.href = "/login";
                 } else {
                     // For optional requests, just reject the promise
                     return Promise.reject(refreshError);

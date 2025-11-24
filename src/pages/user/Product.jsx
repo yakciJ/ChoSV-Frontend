@@ -227,31 +227,28 @@ export default function Product() {
         }
     };
 
-    const getProductDetails = useCallback(
-        async (productId) => {
-            try {
-                if (error) {
-                    clearError(); // reset error
-                }
-                const response = await getProduct(productId);
-                setIsFavorite(response.isFavorite);
-                setProduct(response);
-            } catch (err) {
-                handleError(err);
-                setProduct(null);
+    const getProductDetails = async () => {
+        try {
+            if (error) {
+                clearError(); // reset error
             }
-        },
-        [error, clearError, handleError]
-    );
+            const response = await getProduct(productId);
+            setIsFavorite(response.isFavorite);
+            setProduct(response);
+        } catch (err) {
+            handleError(err);
+            setProduct(null);
+        }
+    };
 
     useEffect(() => {
-        getProductDetails(productId);
+        getProductDetails();
         window.scrollTo({
             top: 0,
             left: 0,
             behavior: "smooth",
         });
-    }, [productId, getProductDetails]);
+    }, [productId]);
 
     //if (!product) return <div>Loading...</div>;
     if (error) {
