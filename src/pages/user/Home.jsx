@@ -3,7 +3,7 @@ import ProductCard from "../../components/ProductCard";
 export default function Home() {
     const products = [
         {
-            id: 1,
+            productId: 1,
             name: "Giày Sneaker",
             price: 350000,
             image: "https://cdn.chotot.com/sP3Z5-5NjFOL1Wt3kiJa1kXWRk_RoJBh7E1WfdALHRo/preset:listing/plain/636b4850ae226740dacad478e4c78734-2957678958690791633.jpg",
@@ -11,7 +11,7 @@ export default function Home() {
             sellerName: "Trần Thị B",
         },
         {
-            id: 2,
+            productId: 2,
             name: "Giày Sneaker",
             price: 350000,
             image: "https://cdn.chotot.com/sP3Z5-5NjFOL1Wt3kiJa1kXWRk_RoJBh7E1WfdALHRo/preset:listing/plain/636b4850ae226740dacad478e4c78734-2957678958690791633.jpg",
@@ -19,7 +19,7 @@ export default function Home() {
             sellerName: "Trần Thị B",
         },
         {
-            id: 3,
+            productId: 3,
             name: "Giày Sneaker",
             price: 350000,
             image: "https://cdn.chotot.com/sP3Z5-5NjFOL1Wt3kiJa1kXWRk_RoJBh7E1WfdALHRo/preset:listing/plain/636b4850ae226740dacad478e4c78734-2957678958690791633.jpg",
@@ -27,7 +27,7 @@ export default function Home() {
             sellerName: "Trần Thị B",
         },
         {
-            id: 4,
+            productId: 4,
             name: "Giày Sneaker",
             price: 350000,
             image: "https://cdn.chotot.com/sP3Z5-5NjFOL1Wt3kiJa1kXWRk_RoJBh7E1WfdALHRo/preset:listing/plain/636b4850ae226740dacad478e4c78734-2957678958690791633.jpg",
@@ -35,7 +35,7 @@ export default function Home() {
             sellerName: "Trần Thị B",
         },
         {
-            id: 5,
+            productId: 5,
             name: "Giày Sneaker",
             price: 350000,
             image: "https://cdn.chotot.com/sP3Z5-5NjFOL1Wt3kiJa1kXWRk_RoJBh7E1WfdALHRo/preset:listing/plain/636b4850ae226740dacad478e4c78734-2957678958690791633.jpg",
@@ -43,7 +43,7 @@ export default function Home() {
             sellerName: "Trần Thị B",
         },
         {
-            id: 6,
+            productId: 6,
             name: "Giày Sneaker",
             price: 350000,
             image: "https://cdn.chotot.com/sP3Z5-5NjFOL1Wt3kiJa1kXWRk_RoJBh7E1WfdALHRo/preset:listing/plain/636b4850ae226740dacad478e4c78734-2957678958690791633.jpg",
@@ -53,9 +53,12 @@ export default function Home() {
     ];
 
     return (
-        <div className="flex flex-col items-center mt-10 gap-12 text-blue-500">
-            <h1 className="text-5xl font-raleway italic ">
-                Sinh viên cần gì - Chợ sinh viên có đó!
+        <div className="flex flex-col items-center gap-12 text-blue-500 ">
+            <h1 className="sm:text-5xl text-4xl font-raleway italic text-center leading-[1.3]">
+                Sinh viên cần gì
+                <span className="hidden lg:inline"> – </span>
+                <br className="lg:hidden " />
+                Chợ sinh viên có đó!
             </h1>
             <div className="flex flex-col gap-8 items-center w-full px-4 md:px-12 lg:px-24">
                 <div className="bg-white rounded-xl justify-center p-4 w-[85vw]">

@@ -82,7 +82,10 @@ instance.interceptors.response.use(
 
             } catch (refreshError) {
                 // Refresh failed - clear token and handle based on request type
-                localStorage.removeItem("access_token");
+                localStorage.clear();
+                if (window.__store) {
+                    window.__store.dispatch({ type: "RESET_STORE" });
+                }
                 processQueue(refreshError, null);
                 
                 // Only redirect if not an optional request

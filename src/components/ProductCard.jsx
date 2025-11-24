@@ -1,6 +1,12 @@
+import { useNavigate } from "react-router-dom";
+
 export default function ProductCard(props) {
+    const navigate = useNavigate();
     return (
-        <div className="md:w-[25vw] xl:w-[13vw] w-[37vw] bg-gray-100 shadow-md rounded-sm border-black border overflow-hidden hover:border-blue-500 hover:shadow-lg hover:shadow-blue-100 hover:-translate-y-1 transition">
+        <div
+            onClick={() => navigate(`/product/${props.productId}`)}
+            className="md:w-[25vw] xl:w-[13vw] w-[37vw] bg-gray-100 shadow-md rounded-sm border-black border overflow-hidden hover:border-blue-500 hover:shadow-lg hover:shadow-blue-100 hover:-translate-y-1 transition"
+        >
             <img
                 src={props.image}
                 alt={props.name}

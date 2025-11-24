@@ -27,7 +27,15 @@ export default function UserLayout() {
     const dispatch = useDispatch();
     const { info: user, isAuthenticated } = useSelector((state) => state.user);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+    const [authCheckInterval, setAuthCheckInterval] = useState(null);
     const dropdownRef = useRef(null);
+
+    useEffect(() => {
+        window.__store = { dispatch };
+        return () => {
+            delete window.__store;
+        };
+    }, [dispatch]);
 
     useEffect(() => {
         // Initialize auth state from localStorage
@@ -55,8 +63,62 @@ export default function UserLayout() {
         localStorage.clear();
         dispatch({ type: "RESET_STORE" });
         setIsDropdownOpen(false);
+        if (authCheckInterval) {
+            clearInterval(authCheckInterval);
+        }
         navigate("/");
     };
+    // cai nay de check token co het han hay k.
+    useEffect(() => {
+        const checkAuthStatus = () => {
+            const token = localStorage.getItem("access_token");
+            const refreshToken = localStorage.getItem("refresh_token");
+
+            // If no tokens but Redux thinks user is authenticated, reset state
+            if (isAuthenticated && !token && !refreshToken) {
+                console.log("No tokens found, resetting auth state");
+                localStorage.clear();
+                dispatch({ type: "RESET_STORE" });
+            }
+
+            // If tokens exist but no user info, try to fetch
+            if (token && isAuthenticated && !user) {
+                dispatch(fetchCurrentUser()).catch(() => {
+                    console.log(
+                        "Failed to fetch user, tokens might be invalid"
+                    );
+                    // If fetch fails, let the axios interceptor handle it
+                });
+            }
+        };
+
+        // Check immediately
+        checkAuthStatus();
+
+        // Set up periodic check every 5 minutes
+        const interval = setInterval(checkAuthStatus, 5 * 60 * 1000);
+        setAuthCheckInterval(interval);
+
+        return () => {
+            if (interval) clearInterval(interval);
+        };
+    }, [dispatch, isAuthenticated, user]);
+
+    // Listen for storage changes (logout in another tab)
+    useEffect(() => {
+        const handleStorageChange = (e) => {
+            if (e.key === "access_token" && !e.newValue) {
+                // Token was removed, reset state
+                dispatch({ type: "RESET_STORE" });
+            }
+        };
+
+        window.addEventListener("storage", handleStorageChange);
+        return () => {
+            window.removeEventListener("storage", handleStorageChange);
+        };
+    }, [dispatch]);
+
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (
@@ -74,13 +136,19 @@ export default function UserLayout() {
     }, []);
 
     return (
-        <div className="min-h-screen w-full bg-blue-100 flex flex-col">
-            <header className="sticky top-0 left-0 right-0 bg-white flex-row flex p-3 items-center justify-between z-50">
+        <div className=" w-full bg-blue-100 flex flex-col text-blue-500">
+            <header className="sticky mb-8 top-0 left-0 right-0 bg-white flex-row flex p-3 items-center justify-between z-50">
                 <TextAlignJustify
                     className="ml-[1vw] flex-shrink-0 text-black"
                     size={22}
                 />
-                <Link to="/" className="flex items-center space-x-3 ">
+                <Link
+                    to="/"
+                    className="flex items-center space-x-3"
+                    onClick={() =>
+                        window.scrollTo({ top: 0, left: 0, behavior: "smooth" })
+                    }
+                >
                     <img
                         src="/Logo.png"
                         alt="Logo"
@@ -235,7 +303,7 @@ export default function UserLayout() {
                     </div>
                 </div>
             </header>
-            <main className="flex-1">
+            <main className="flex-1 justify-center items-center flex">
                 <Outlet />
             </main>
             <footer className="mt-8 p-4 bg-gray-800 text-white">

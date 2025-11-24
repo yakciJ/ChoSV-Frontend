@@ -4,12 +4,16 @@ import Home from "../pages/user/Home.jsx";
 import Login from "../pages/auth/Login.jsx";
 import Register from "../pages/auth/Register.jsx";
 import AuthLayout from "../pages/auth/AuthLayout.jsx";
+import Product from "../pages/user/Product.jsx";
 
 export const router = createBrowserRouter([
     {
         path: "/",
         element: <UserLayout />,
-        children: [{ index: true, element: <Home /> }],
+        children: [
+            { index: true, element: <Home /> },
+            { path: "product/:productId", element: <Product /> },
+        ],
     },
     {
         path: "/",
