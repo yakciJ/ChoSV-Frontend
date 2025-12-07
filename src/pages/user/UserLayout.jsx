@@ -174,7 +174,7 @@ export default function UserLayout() {
                         />
                     )}
                     <Search
-                        className="absolute right-2 top-1/2 -translate-y-1/2 bg-blue-500 hover:bg-blue-600  p-2 rounded-full transition"
+                        className="text-white absolute right-2 top-1/2 -translate-y-1/2 bg-blue-500 hover:bg-blue-600  p-2 rounded-full transition"
                         size={30}
                     />
                 </div>

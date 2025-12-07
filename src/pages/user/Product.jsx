@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useParams } from "react-router-dom";
 import { getProduct } from "../../services/productService";
@@ -18,6 +18,8 @@ import ErrorDisplay from "../../components/Error";
 import { addFavorite, removeFavorite } from "../../services/favoriteService";
 import { formatDateLocal } from "../../helpers/formatDate";
 import ProductCarousel from "../../components/ProductCarousel";
+import { getUserWallPosts } from "../../services/userWallPostService";
+import UserWallPost from "../../components/UserWallPost";
 
 export default function Product() {
     const { productId } = useParams();
@@ -28,6 +30,7 @@ export default function Product() {
     const [showLeftButton, setShowLeftButton] = useState(false);
     const [showRightButton, setShowRightButton] = useState(false);
     const thumbnailContainerRef = useRef(null);
+    const [userWallPosts, setUserWallPosts] = useState([]);
 
     // mẫu data
     //     {
@@ -223,7 +226,7 @@ export default function Product() {
                 setIsFavorite(true);
             }
         } catch (err) {
-            console.log(err);
+            handleError(err);
         }
     };
 
@@ -241,6 +244,20 @@ export default function Product() {
         }
     };
 
+    const fetchUserWallPosts = async (userId, pageIndex, pageSize) => {
+        try {
+            const response = await getUserWallPosts(
+                userId,
+                pageIndex,
+                pageSize
+            );
+            setUserWallPosts(response.items || []);
+            console.log("User Wall Posts:", response);
+        } catch (err) {
+            handleError(err);
+        }
+    };
+
     useEffect(() => {
         getProductDetails();
         window.scrollTo({
@@ -249,6 +266,12 @@ export default function Product() {
             behavior: "smooth",
         });
     }, [productId]);
+
+    useEffect(() => {
+        if (product?.sellerId) {
+            fetchUserWallPosts(product.sellerId, 1, 2);
+        }
+    }, [product]);
 
     //if (!product) return <div>Loading...</div>;
     if (error) {
@@ -450,15 +473,35 @@ export default function Product() {
             {/* mo ta chi tiet san pham va danh gia */}
             <div className="w-full flex flex-col lg:flex-row gap-4 mt-4 min-h-72">
                 <div className="flex-1 basis-1/2 bg-white rounded-md p-6">
-                    <h2 className="text-2xl font-semibold mb-4">
+                    <h2 className="text-2xl font-semibold mb-2 border-b border-gray-300">
                         Mô tả chi tiết
                     </h2>
                     <p className="text-gray-800 whitespace-pre-line">
                         {product?.productDescription}
                     </p>
                 </div>
-                <div className="flex-1 basis-1/2 bg-white rounded-md p-6">
-                    <h2 className="text-2xl font-semibold mb-4">Đánh giá</h2>
+                <div className="flex-1 basis-1/2 bg-white rounded-md p-6 pb-4">
+                    <div className="flex border-b border-gray-300">
+                        <h2 className="text-2xl font-semibold">Đánh giá</h2>
+                        <Link
+                            className="flex text-xl font-semibold ml-auto text-blue-500 hover:underline hover:text-blue-500"
+                            to={`/user/${product?.sellerName}`}
+                        >
+                            <div>Xem thêm</div>
+                            <ChevronLeft className="rotate-180 self-center" />
+                        </Link>
+                    </div>
+                    <div className="mt-4">
+                        {userWallPosts.length === 0 ? (
+                            <p className="text-gray-600">
+                                Chưa có đánh giá nào.
+                            </p>
+                        ) : (
+                            userWallPosts.map((post) => (
+                                <UserWallPost key={post.id} post={post} />
+                            ))
+                        )}
+                    </div>
                     <div className="flex items-center"></div>
                 </div>
             </div>

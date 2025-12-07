@@ -3,9 +3,10 @@ import { useState } from "react";
 export const useErrorHandler = () => {
     const [error, setError] = useState(null);
 
-    const handleError = (err) => {
+    const handleError = (err, options) => {
         const errorMessage = err.response?.data?.error?.toLowerCase() || "";
         const statusCode = err.response?.status;
+        const { silent = false } = options; // Allow silent failures
 
         // Define error message patterns
         const notFoundPatterns = [
@@ -29,9 +30,12 @@ export const useErrorHandler = () => {
             statusCode === 404
         ) {
             setError("not-found");
-        }
-        // Check if it's a forbidden error
-        else if (
+        } else if (statusCode === 401) {
+            if (silent) {
+                return;
+            }
+            return;
+        } else if (
             forbiddenPatterns.some((pattern) =>
                 errorMessage.includes(pattern)
             ) ||

@@ -90,7 +90,7 @@ instance.interceptors.response.use(
 
                 // Only redirect if not an optional request
                 if (!originalRequest.skipAuthRedirect) {
-                    //window.location.href = "/login";
+                    window.location.href = "/login";
                 } else {
                     // For optional requests, just reject the promise
                     return Promise.reject(refreshError);

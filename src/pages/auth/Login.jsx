@@ -90,7 +90,7 @@ export default function Login() {
                 <button
                     type="submit"
                     disabled={loading}
-                    className={`text-2xl text-white px-4 py-2 rounded-md transition-colors ${
+                    className={`text-2xl text-white px-4 py-2 rounded-md block mx-auto transition-colors ${
                         loading
                             ? "bg-gray-400 cursor-not-allowed"
                             : "bg-blue-500 hover:bg-blue-600"
