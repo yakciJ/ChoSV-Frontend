@@ -32,6 +32,11 @@ export default function Product() {
     const thumbnailContainerRef = useRef(null);
     const [userWallPosts, setUserWallPosts] = useState([]);
 
+    const [newestProducts, setNewestProducts] = useState([]);
+    const [popularProducts, setPopularProducts] = useState([]);
+    const [recommendedProducts, setRecommendedProducts] = useState([]);
+    const [relevantProducts, setRelevantProducts] = useState([]);
+
     // mẫu data
     //     {
     //   "productId": 3,
@@ -68,105 +73,6 @@ export default function Product() {
     // Lay them danh sach san pham tuong tu o day nua
     // Lay them danh sach san pham co the ban thich o day nua nhugn ma co san o store
     // lay danh gia nguoi ban.
-
-    const products = [
-        {
-            productId: 1,
-            name: "Giày Sneaker",
-            price: 350000,
-            image: "https://cdn.chotot.com/sP3Z5-5NjFOL1Wt3kiJa1kXWRk_RoJBh7E1WfdALHRo/preset:listing/plain/636b4850ae226740dacad478e4c78734-2957678958690791633.jpg",
-            sellerAvatar: "/images/seller2.jpg",
-            sellerName: "Trần Thị B",
-        },
-        {
-            productId: 2,
-            name: "Giày Sneaker",
-            price: 350000,
-            image: "https://cdn.chotot.com/sP3Z5-5NjFOL1Wt3kiJa1kXWRk_RoJBh7E1WfdALHRo/preset:listing/plain/636b4850ae226740dacad478e4c78734-2957678958690791633.jpg",
-            sellerAvatar: "/images/seller2.jpg",
-            sellerName: "Trần Thị B",
-        },
-        {
-            productId: 3,
-            name: "Giày Sneaker",
-            price: 350000,
-            image: "https://cdn.chotot.com/sP3Z5-5NjFOL1Wt3kiJa1kXWRk_RoJBh7E1WfdALHRo/preset:listing/plain/636b4850ae226740dacad478e4c78734-2957678958690791633.jpg",
-            sellerAvatar: "/images/seller2.jpg",
-            sellerName: "Trần Thị B",
-        },
-        {
-            productId: 4,
-            name: "Giày Sneaker",
-            price: 350000,
-            image: "https://cdn.chotot.com/sP3Z5-5NjFOL1Wt3kiJa1kXWRk_RoJBh7E1WfdALHRo/preset:listing/plain/636b4850ae226740dacad478e4c78734-2957678958690791633.jpg",
-            sellerAvatar: "/images/seller2.jpg",
-            sellerName: "Trần Thị B",
-        },
-        {
-            productId: 5,
-            name: "Giày Sneaker",
-            price: 350000,
-            image: "https://cdn.chotot.com/sP3Z5-5NjFOL1Wt3kiJa1kXWRk_RoJBh7E1WfdALHRo/preset:listing/plain/636b4850ae226740dacad478e4c78734-2957678958690791633.jpg",
-            sellerAvatar: "/images/seller2.jpg",
-            sellerName: "Trần Thị B",
-        },
-        {
-            productId: 6,
-            name: "Giày Sneaker",
-            price: 350000,
-            image: "https://cdn.chotot.com/sP3Z5-5NjFOL1Wt3kiJa1kXWRk_RoJBh7E1WfdALHRo/preset:listing/plain/636b4850ae226740dacad478e4c78734-2957678958690791633.jpg",
-            sellerAvatar: "/images/seller2.jpg",
-            sellerName: "Trần Thị B",
-        },
-        {
-            productId: 7,
-            name: "Giày Sneaker",
-            price: 350000,
-            image: "https://cdn.chotot.com/sP3Z5-5NjFOL1Wt3kiJa1kXWRk_RoJBh7E1WfdALHRo/preset:listing/plain/636b4850ae226740dacad478e4c78734-2957678958690791633.jpg",
-            sellerAvatar: "/images/seller2.jpg",
-            sellerName: "Trần Thị B",
-        },
-        {
-            productId: 8,
-            name: "Giày Sneaker",
-            price: 350000,
-            image: "https://cdn.chotot.com/sP3Z5-5NjFOL1Wt3kiJa1kXWRk_RoJBh7E1WfdALHRo/preset:listing/plain/636b4850ae226740dacad478e4c78734-2957678958690791633.jpg",
-            sellerAvatar: "/images/seller2.jpg",
-            sellerName: "Trần Thị B",
-        },
-        {
-            productId: 9,
-            name: "Giày Sneaker",
-            price: 350000,
-            image: "https://cdn.chotot.com/sP3Z5-5NjFOL1Wt3kiJa1kXWRk_RoJBh7E1WfdALHRo/preset:listing/plain/636b4850ae226740dacad478e4c78734-2957678958690791633.jpg",
-            sellerAvatar: "/images/seller2.jpg",
-            sellerName: "Trần Thị B",
-        },
-        {
-            productId: 10,
-            name: "Giày Sneaker",
-            price: 350000,
-            image: "https://cdn.chotot.com/sP3Z5-5NjFOL1Wt3kiJa1kXWRk_RoJBh7E1WfdALHRo/preset:listing/plain/636b4850ae226740dacad478e4c78734-2957678958690791633.jpg",
-            sellerAvatar: "/images/seller2.jpg",
-            sellerName: "Trần Thị B",
-        },
-        {
-            productId: 11,
-            name: "Giày Sneaker",
-            price: 350000,
-            image: "https://cdn.chotot.com/sP3Z5-5NjFOL1Wt3kiJa1kXWRk_RoJBh7E1WfdALHRo/preset:listing/plain/636b4850ae226740dacad478e4c78734-2957678958690791633.jpg",
-            sellerAvatar: "/images/seller2.jpg",
-            sellerName: "Trần Thị B",
-        },
-        {
-            productId: 12,
-            name: "Giày Sneaker",
-            price: 350000,
-            image: "https://cdn.chotot.com/sP3Z5-5NjFOL1Wt3kiJa1kXWRk_RoJBh7E1WfdALHRo/preset:listing/plain/636b4850ae226740dacad478e4c78734-2957678958690791633.jpg",
-            sellerAvatar: "/images/seller2.jpg",
-            sellerName: "Trần Thị B",
-        },
-    ];
 
     const checkScrollButtons = () => {
         const container = thumbnailContainerRef.current;
@@ -252,7 +158,6 @@ export default function Product() {
                 pageSize
             );
             setUserWallPosts(response.items || []);
-            console.log("User Wall Posts:", response);
         } catch (err) {
             handleError(err);
         }
@@ -508,13 +413,13 @@ export default function Product() {
 
             <ProductCarousel
                 title="Sản phẩm tương tự"
-                products={products}
+                products={relevantProducts}
                 viewAllLink={`/category/${product?.childCategoryId}`}
             />
-            {products && (
+            {recommendedProducts && (
                 <ProductCarousel
                     title="Sản phẩm bạn có thể thích"
-                    products={products}
+                    products={recommendedProducts}
                     viewAllLink={`/category/${product?.childCategoryId}`}
                 />
             )}

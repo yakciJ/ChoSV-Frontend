@@ -1,5 +1,5 @@
 import { formatDateLocal } from "../helpers/formatDate";
-import { User } from "lucide-react"; // For fallback avatar
+import { User } from "lucide-react";
 
 export default function UserWallPost({ post }) {
     return (
@@ -16,7 +16,9 @@ export default function UserWallPost({ post }) {
                 )}
 
                 <div className="ml-2">
-                    <p className="font-semibold">{post.posterUserName}</p>
+                    <p className="font-semibold">
+                        {post.posterFullName || post.posterUserName}
+                    </p>
                     <p className="text-gray-500 text-sm">
                         {formatDateLocal(post.createdAt)}
                     </p>
