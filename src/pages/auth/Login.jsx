@@ -25,15 +25,18 @@ export default function Login() {
 
     const onSubmit = async (data) => {
         try {
-            const resultAction = await dispatch(loginUser(data));
+            const loginData = {
+                username: data.username,
+                password: data.password,
+                deviceInfo: navigator.userAgent,
+                rememberMe: data.rememberMe || false,
+            };
+            const resultAction = await dispatch(loginUser(loginData));
 
-            // Kiểm tra nếu login thành công
             if (loginUser.fulfilled.match(resultAction)) {
-                // Sau khi login xong thì có thể fetch thông tin user (tùy)
                 await dispatch(fetchCurrentUser());
-                navigate("/"); // điều hướng sang trang chủ (hoặc chỗ m muốn)
+                navigate("/");
             }
-            // Error handling is now done in Redux state
         } catch (err) {
             console.error("Unexpected error:", err);
         }
@@ -86,7 +89,17 @@ export default function Login() {
                         </div>
                     )}
                 </div>
-
+                <div className="flex items-center space-x-2">
+                    <input
+                        type="checkbox"
+                        id="rememberMe"
+                        {...register("rememberMe")}
+                        className="w-4 h-4"
+                    />
+                    <label htmlFor="rememberMe" className="text-lg">
+                        Ghi nhớ đăng nhập
+                    </label>
+                </div>
                 <button
                     type="submit"
                     disabled={loading}

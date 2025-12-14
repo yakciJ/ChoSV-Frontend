@@ -5,6 +5,7 @@ import Login from "../pages/auth/Login.jsx";
 import Register from "../pages/auth/Register.jsx";
 import AuthLayout from "../pages/auth/AuthLayout.jsx";
 import Product from "../pages/user/Product.jsx";
+import Favorite from "../pages/user/Favorite.jsx";
 
 export const router = createBrowserRouter([
     {
@@ -13,6 +14,7 @@ export const router = createBrowserRouter([
         children: [
             { index: true, element: <Home /> },
             { path: "product/:productId", element: <Product /> },
+            { path: "favorites", element: <Favorite /> },
         ],
     },
     {

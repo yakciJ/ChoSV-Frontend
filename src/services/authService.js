@@ -5,7 +5,7 @@ const url = "/api/User/";
 
 export const login = async (credentials) => {
     const response = await axiosInstance.post(`${url}login`, credentials);
-    console.log("authService login response:", response); // Debug log
+    console.log("authService login response:", response);
     return response;
 };
 export const register = async (userInfo) => {

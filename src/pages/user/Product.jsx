@@ -20,6 +20,10 @@ import { formatDateLocal } from "../../helpers/formatDate";
 import ProductCarousel from "../../components/ProductCarousel";
 import { getUserWallPosts } from "../../services/userWallPostService";
 import UserWallPost from "../../components/UserWallPost";
+import {
+    getNewestProducts,
+    getPopularProducts,
+} from "../../services/productService";
 
 export default function Product() {
     const { productId } = useParams();
@@ -73,6 +77,26 @@ export default function Product() {
     // Lay them danh sach san pham tuong tu o day nua
     // Lay them danh sach san pham co the ban thich o day nua nhugn ma co san o store
     // lay danh gia nguoi ban.
+
+    const fetchNewestProducts = async () => {
+        try {
+            const response = await getNewestProducts();
+            console.log("Newest Products Response:", response);
+            setNewestProducts(response.items || []);
+        } catch (err) {
+            console.error("Error fetching newest products:", err);
+        }
+    };
+
+    const fetchPopularProducts = async () => {
+        try {
+            const response = await getPopularProducts();
+            console.log("Popular Products Response:", response);
+            setPopularProducts(response.items || []);
+        } catch (err) {
+            console.error("Error fetching popular products:", err);
+        }
+    };
 
     const checkScrollButtons = () => {
         const container = thumbnailContainerRef.current;
@@ -165,6 +189,8 @@ export default function Product() {
 
     useEffect(() => {
         getProductDetails();
+        fetchNewestProducts();
+        fetchPopularProducts();
         window.scrollTo({
             top: 0,
             left: 0,
@@ -310,7 +336,7 @@ export default function Product() {
                         <div className="flex mt-2">
                             <Clock9 />
                             <span className="ml-2">
-                                Đăng ngày:{" "}
+                                Đăng lúc:{" "}
                                 {formatDateLocal(product?.createdDate)}
                             </span>
                         </div>
@@ -423,6 +449,16 @@ export default function Product() {
                     viewAllLink={`/category/${product?.childCategoryId}`}
                 />
             )}
+            <ProductCarousel
+                title="Sản phẩm mới"
+                products={newestProducts}
+                viewAllLink={`/category/${product?.childCategoryId}`}
+            />
+            <ProductCarousel
+                title="Sản phẩm nổi bật"
+                products={popularProducts}
+                viewAllLink={`/category/${product?.childCategoryId}`}
+            />
         </div>
     );
 }

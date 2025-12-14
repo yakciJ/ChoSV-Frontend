@@ -2,14 +2,19 @@ import axiosInstance from "./axiosInstance";
 
 const url = `/api/Product/`;
 
-export const getNewestProducts = async () => {
-    const response = await axiosInstance.get(url + `newest`);
+export const getNewestProducts = async (page = 1, pageSize = 12) => {
+    const response = await axiosInstance.get(url + `newest`, {
+        params: {
+            page,
+            pageSize,
+        },
+    });
     return response;
 };
 
 export const getPopularProducts = async (
     page = 1,
-    pageSize = 10,
+    pageSize = 12,
     daysBack = 30
 ) => {
     const response = await axiosInstance.get(url + `popular`, {

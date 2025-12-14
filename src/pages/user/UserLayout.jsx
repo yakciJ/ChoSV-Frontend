@@ -27,7 +27,8 @@ export default function UserLayout() {
     const dispatch = useDispatch();
     const { info: user, isAuthenticated } = useSelector((state) => state.user);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-    const [authCheckInterval, setAuthCheckInterval] = useState(null);
+    //const [authCheckInterval, setAuthCheckInterval] = useState(null);
+    const [hasValidatedToken, setHasValidatedToken] = useState(false);
     const dropdownRef = useRef(null);
 
     useEffect(() => {
@@ -43,10 +44,28 @@ export default function UserLayout() {
     }, [dispatch]);
 
     useEffect(() => {
-        if (isAuthenticated && !user) {
-            dispatch(fetchCurrentUser());
+        if (isAuthenticated && !hasValidatedToken) {
+            console.log("Validating token and fetching user...");
+            dispatch(fetchCurrentUser())
+                .unwrap()
+                .then(() => {
+                    console.log("User fetched successfully");
+                    setHasValidatedToken(true);
+                })
+                .catch((error) => {
+                    console.log(
+                        "Failed to fetch user, resetting auth state",
+                        error
+                    );
+                    localStorage.clear();
+                    dispatch({ type: "RESET_STORE" });
+                    setHasValidatedToken(false);
+                });
         }
-    }, [dispatch, isAuthenticated, user]);
+        if (!isAuthenticated) {
+            setHasValidatedToken(false);
+        }
+    }, [dispatch, isAuthenticated, hasValidatedToken]);
 
     const navigate = useNavigate();
 
@@ -62,47 +81,49 @@ export default function UserLayout() {
         // Clear user data from localStorage
         localStorage.clear();
         dispatch({ type: "RESET_STORE" });
+        dispatch({ type: "user/logout" });
         setIsDropdownOpen(false);
-        if (authCheckInterval) {
-            clearInterval(authCheckInterval);
-        }
+        setHasValidatedToken(false);
+        // if (authCheckInterval) {
+        //     clearInterval(authCheckInterval);
+        // }
         navigate("/");
     };
     // cai nay de check token co het han hay k.
-    useEffect(() => {
-        const checkAuthStatus = () => {
-            const token = localStorage.getItem("access_token");
-            const refreshToken = localStorage.getItem("refresh_token");
+    // useEffect(() => {
+    //     const checkAuthStatus = () => {
+    //         const token = localStorage.getItem("access_token");
+    //         const refreshToken = localStorage.getItem("refresh_token");
 
-            // If no tokens but Redux thinks user is authenticated, reset state
-            if (isAuthenticated && !token && !refreshToken) {
-                console.log("No tokens found, resetting auth state");
-                localStorage.clear();
-                dispatch({ type: "RESET_STORE" });
-            }
+    //         // If no tokens but Redux thinks user is authenticated, reset state
+    //         if (isAuthenticated && !token && !refreshToken) {
+    //             console.log("No tokens found, resetting auth state");
+    //             localStorage.clear();
+    //             dispatch({ type: "RESET_STORE" });
+    //         }
 
-            // If tokens exist but no user info, try to fetch
-            if (token && isAuthenticated && !user) {
-                dispatch(fetchCurrentUser()).catch(() => {
-                    console.log(
-                        "Failed to fetch user, tokens might be invalid"
-                    );
-                    // If fetch fails, let the axios interceptor handle it
-                });
-            }
-        };
+    //         // If tokens exist but no user info, try to fetch
+    //         if (token && isAuthenticated && !user) {
+    //             dispatch(fetchCurrentUser()).catch(() => {
+    //                 console.log(
+    //                     "Failed to fetch user, tokens might be invalid"
+    //                 );
+    //                 // If fetch fails, let the axios interceptor handle it
+    //             });
+    //         }
+    //     };
 
-        // Check immediately
-        checkAuthStatus();
+    //     // Check immediately
+    //     checkAuthStatus();
 
-        // Set up periodic check every 5 minutes
-        const interval = setInterval(checkAuthStatus, 5 * 60 * 1000);
-        setAuthCheckInterval(interval);
+    //     // Set up periodic check every 5 minutes
+    //     const interval = setInterval(checkAuthStatus, 5 * 60 * 1000);
+    //     setAuthCheckInterval(interval);
 
-        return () => {
-            if (interval) clearInterval(interval);
-        };
-    }, [dispatch, isAuthenticated, user]);
+    //     return () => {
+    //         if (interval) clearInterval(interval);
+    //     };
+    // }, [dispatch, isAuthenticated, user]);
 
     // Listen for storage changes (logout in another tab)
     useEffect(() => {
@@ -110,6 +131,7 @@ export default function UserLayout() {
             if (e.key === "access_token" && !e.newValue) {
                 // Token was removed, reset state
                 dispatch({ type: "RESET_STORE" });
+                dispatch({ type: "user/logout" });
             }
         };
 
@@ -180,10 +202,12 @@ export default function UserLayout() {
                 </div>
                 <div className="flex items-center gap-4 ml-2 md:ml-0">
                     <div className="hidden md:flex flex-col md:flex-row md:items-center md:gap-4 lg:gap-6">
-                        <Heart
-                            className="text-gray-600 hover:text-red-500 cursor-pointer"
-                            size={24}
-                        />
+                        <Link to="/favorites">
+                            <Heart
+                                className="text-gray-600 hover:text-red-500 cursor-pointer"
+                                size={24}
+                            />
+                        </Link>
                         <MessageCircleMore
                             className="text-gray-600 hover:text-blue-500 cursor-pointer"
                             size={24}
@@ -212,9 +236,9 @@ export default function UserLayout() {
                                 onClick={toggleDropdown}
                                 className="flex items-center bg-gray-100 gap-2 pl-0.5 pr-3 py-1 rounded-full hover:bg-gray-100 transition"
                             >
-                                {user?.avatarUrl ? (
+                                {user?.avatarImage ? (
                                     <img
-                                        src={user.avatarUrl}
+                                        src={user.avatarImage}
                                         alt="User Avatar"
                                         className="w-8 h-8 rounded-full object-cover"
                                     />
@@ -222,9 +246,7 @@ export default function UserLayout() {
                                     <User className="w-8 h-8 text-gray-500 bg-gray-200 rounded-full p-1" />
                                 )}
                                 <span className="font-medium text-gray-800 hidden sm:block">
-                                    {user?.fullName
-                                        ? user.fullName
-                                        : user.userName}
+                                    {user.fullName || user.userName}
                                 </span>
                                 <ChevronDown className="w-4 h-4 text-gray-600" />
                             </button>

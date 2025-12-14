@@ -43,6 +43,7 @@ export const loginUser = createAsyncThunk(
             console.log("Login successful, storing tokens..."); // Debug log
             localStorage.setItem("access_token", response.accessToken);
             localStorage.setItem("userName", response.userName);
+            localStorage.setItem("user_data", JSON.stringify(response)); // Store complete user data
 
             return response;
         } catch (error) {
@@ -89,18 +90,30 @@ const userSlice = createSlice({
             state.isAuthenticated = false;
             localStorage.removeItem("access_token");
             localStorage.removeItem("userName");
+            localStorage.removeItem("user_data");
         },
         clearError: (state) => {
             state.error = null;
         },
         initializeAuth: (state) => {
             const token = localStorage.getItem("access_token");
-            const userName = localStorage.getItem("userName");
+            const userData = localStorage.getItem("user_data");
 
-            if (token && userName) {
-                state.isAuthenticated = true;
-                // Optionally set basic user info from localStorage
-                state.info = { userName };
+            if (token && userData) {
+                try {
+                    const parsedUserData = JSON.parse(userData);
+                    state.isAuthenticated = true;
+                    state.info = parsedUserData; // Set complete user data
+                } catch (error) {
+                    console.error(
+                        "Error parsing user data from localStorage:",
+                        error
+                    );
+                    // Clear corrupted data
+                    localStorage.removeItem("user_data");
+                    localStorage.removeItem("access_token");
+                    localStorage.removeItem("userName");
+                }
             }
         },
     },

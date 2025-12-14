@@ -12,7 +12,9 @@ export const removeFavorite = async (productId) => {
     return response;
 };
 
-export const getFavorites = async () => {
-    const response = await axiosInstance.get(`${url}`);
+export const getFavorites = async (page = 1, pageSize = 10) => {
+    const response = await axiosInstance.get(
+        `${url}?page=${page}&pageSize=${pageSize}`
+    );
     return response;
 };
