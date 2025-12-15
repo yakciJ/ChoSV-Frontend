@@ -6,6 +6,7 @@ import Register from "../pages/auth/Register.jsx";
 import AuthLayout from "../pages/auth/AuthLayout.jsx";
 import Product from "../pages/user/Product.jsx";
 import Favorite from "../pages/user/Favorite.jsx";
+import ManageProducts from "../pages/user/ManageProducts.jsx";
 
 export const router = createBrowserRouter([
     {
@@ -15,6 +16,7 @@ export const router = createBrowserRouter([
             { index: true, element: <Home /> },
             { path: "product/:productId", element: <Product /> },
             { path: "favorites", element: <Favorite /> },
+            { path: "product-management", element: <ManageProducts /> },
         ],
     },
     {

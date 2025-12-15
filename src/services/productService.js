@@ -38,3 +38,14 @@ export const getProduct = async (productId) => {
     const response = await axiosInstance.get(url + `${productId}`);
     return response;
 };
+
+export const getMyProduct = async (page = 1, pageSize = 10, status = null) => {
+    const response = await axiosInstance.get(url + `me`, {
+        params: {
+            page,
+            pageSize,
+            status,
+        },
+    });
+    return response;
+};

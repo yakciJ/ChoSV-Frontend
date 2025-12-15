@@ -2,7 +2,8 @@ import { formatVND } from "../helpers/formatPrice";
 import { formatDateLocal } from "../helpers/formatDate";
 import { removeFavorite, addFavorite } from "../services/favoriteService";
 import { useState } from "react";
-import { User } from "lucide-react";
+import { Heart, MessageSquare, Trash2, User } from "lucide-react";
+import { Link } from "react-router-dom";
 
 export default function FavoriteProductCard({ product }) {
     const [isFavorited, setIsFavorited] = useState(product.isFavorited);
@@ -27,7 +28,10 @@ export default function FavoriteProductCard({ product }) {
 
     return (
         <div className="flex border gap-4 border-gray-300 rounded-md p-2 w-full my-4">
-            <div className="flex gap-4 flex-1">
+            <Link
+                to={`/product/${product.productId}`}
+                className="flex gap-4 flex-1 text-inherit no-underline"
+            >
                 <img
                     src={product.firstImageUrl}
                     alt={product.productName}
@@ -60,27 +64,34 @@ export default function FavoriteProductCard({ product }) {
                         <p>Đăng lúc: {formatDateLocal(product.createdDate)}</p>
                     </div>
                 </div>
-            </div>
-            <div className="flex flex-col items-center justify-center gap-2 w-48">
-                <a
-                    href={`/tin-nhan/${product.sellerName}`}
-                    className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors block text-center hover:text-white w-full"
+            </Link>
+            <div className="flex flex-col items-center justify-center gap-2">
+                <Link
+                    className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors flex items-center justify-center hover:text-white w-full"
+                    to={`/tin-nhan/${product.sellerName}`}
                 >
-                    Nhắn tin
-                </a>
+                    <MessageSquare />
+                    <p className="hidden lg:block mx-2">Nhắn tin</p>
+                </Link>
                 {isFavorited ? (
                     <button
-                        className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-colors w-full"
+                        className="bg-red-500 flex text-white px-4 py-2 rounded-md hover:bg-red-600 transition-colors w-full"
                         onClick={removeFromFavorites}
                     >
-                        Xóa khỏi yêu thích
+                        <Trash2 />
+                        <p className="hidden lg:block mx-2">
+                            Xóa khỏi yêu thích
+                        </p>
                     </button>
                 ) : (
                     <button
-                        className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors w-full"
+                        className="bg-blue-500 flex text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors w-full"
                         onClick={addToFavorites}
                     >
-                        Thêm vào yêu thích
+                        <Heart />
+                        <p className="hidden lg:block mx-2">
+                            Thêm vào yêu thích
+                        </p>
                     </button>
                 )}
             </div>

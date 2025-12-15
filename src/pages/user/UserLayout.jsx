@@ -217,13 +217,13 @@ export default function UserLayout() {
                             size={24}
                         />
                         <Link
-                            to="/quan-ly-tin"
+                            to="/product-management"
                             className="px-4 py-2 bg-gray-100 text-gray-800 rounded-3xl hover:bg-gray-200 transition whitespace-nowrap"
                         >
                             Quản lý tin
                         </Link>
                         <Link
-                            to="/dang-tin"
+                            to="/post-product"
                             className="px-4 py-2 bg-blue-500 text-white rounded-3xl hover:bg-blue-600 hover:text-white transition whitespace-nowrap"
                         >
                             Đăng tin
