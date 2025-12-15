@@ -16,8 +16,6 @@ export default function Home() {
     const [showRecommended, setShowRecommended] = useState(false);
     const {
         data: categories,
-        loading,
-        error,
     } = useSelector((state) => state.categories);
 
     const dispatch = useDispatch();

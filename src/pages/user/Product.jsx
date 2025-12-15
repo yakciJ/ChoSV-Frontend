@@ -81,7 +81,6 @@ export default function Product() {
     const fetchNewestProducts = async () => {
         try {
             const response = await getNewestProducts();
-            console.log("Newest Products Response:", response);
             setNewestProducts(response.items || []);
         } catch (err) {
             console.error("Error fetching newest products:", err);
@@ -91,7 +90,6 @@ export default function Product() {
     const fetchPopularProducts = async () => {
         try {
             const response = await getPopularProducts();
-            console.log("Popular Products Response:", response);
             setPopularProducts(response.items || []);
         } catch (err) {
             console.error("Error fetching popular products:", err);

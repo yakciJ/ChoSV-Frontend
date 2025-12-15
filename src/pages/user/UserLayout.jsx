@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchCurrentUser, initializeAuth } from "../../store/userSlice";
+import { initializeAuth } from "../../store/userSlice";
 import { useNavigate } from "react-router-dom";
 import { useRef } from "react";
 
@@ -27,8 +27,6 @@ export default function UserLayout() {
     const dispatch = useDispatch();
     const { info: user, isAuthenticated } = useSelector((state) => state.user);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-    //const [authCheckInterval, setAuthCheckInterval] = useState(null);
-    const [hasValidatedToken, setHasValidatedToken] = useState(false);
     const dropdownRef = useRef(null);
 
     useEffect(() => {
@@ -39,33 +37,9 @@ export default function UserLayout() {
     }, [dispatch]);
 
     useEffect(() => {
-        // Initialize auth state from localStorage
         dispatch(initializeAuth());
     }, [dispatch]);
 
-    useEffect(() => {
-        if (isAuthenticated && !hasValidatedToken) {
-            console.log("Validating token and fetching user...");
-            dispatch(fetchCurrentUser())
-                .unwrap()
-                .then(() => {
-                    console.log("User fetched successfully");
-                    setHasValidatedToken(true);
-                })
-                .catch((error) => {
-                    console.log(
-                        "Failed to fetch user, resetting auth state",
-                        error
-                    );
-                    localStorage.clear();
-                    dispatch({ type: "RESET_STORE" });
-                    setHasValidatedToken(false);
-                });
-        }
-        if (!isAuthenticated) {
-            setHasValidatedToken(false);
-        }
-    }, [dispatch, isAuthenticated, hasValidatedToken]);
 
     const navigate = useNavigate();
 
@@ -78,58 +52,16 @@ export default function UserLayout() {
     };
 
     const handleLogout = () => {
-        // Clear user data from localStorage
         localStorage.clear();
         dispatch({ type: "RESET_STORE" });
         dispatch({ type: "user/logout" });
         setIsDropdownOpen(false);
-        setHasValidatedToken(false);
-        // if (authCheckInterval) {
-        //     clearInterval(authCheckInterval);
-        // }
         navigate("/");
     };
-    // cai nay de check token co het han hay k.
-    // useEffect(() => {
-    //     const checkAuthStatus = () => {
-    //         const token = localStorage.getItem("access_token");
-    //         const refreshToken = localStorage.getItem("refresh_token");
-
-    //         // If no tokens but Redux thinks user is authenticated, reset state
-    //         if (isAuthenticated && !token && !refreshToken) {
-    //             console.log("No tokens found, resetting auth state");
-    //             localStorage.clear();
-    //             dispatch({ type: "RESET_STORE" });
-    //         }
-
-    //         // If tokens exist but no user info, try to fetch
-    //         if (token && isAuthenticated && !user) {
-    //             dispatch(fetchCurrentUser()).catch(() => {
-    //                 console.log(
-    //                     "Failed to fetch user, tokens might be invalid"
-    //                 );
-    //                 // If fetch fails, let the axios interceptor handle it
-    //             });
-    //         }
-    //     };
-
-    //     // Check immediately
-    //     checkAuthStatus();
-
-    //     // Set up periodic check every 5 minutes
-    //     const interval = setInterval(checkAuthStatus, 5 * 60 * 1000);
-    //     setAuthCheckInterval(interval);
-
-    //     return () => {
-    //         if (interval) clearInterval(interval);
-    //     };
-    // }, [dispatch, isAuthenticated, user]);
-
-    // Listen for storage changes (logout in another tab)
+    
     useEffect(() => {
         const handleStorageChange = (e) => {
             if (e.key === "access_token" && !e.newValue) {
-                // Token was removed, reset state
                 dispatch({ type: "RESET_STORE" });
                 dispatch({ type: "user/logout" });
             }

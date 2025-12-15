@@ -7,9 +7,9 @@ export const fetchCurrentUser = createAsyncThunk(
     "user/fetchUser",
     async (_, { rejectWithValue }) => {
         try {
-            const userName = localStorage.getItem("userName");
-            if (!userName) throw new Error("No user logged in");
-            return await userService.getUser(userName);
+            const token = localStorage.getItem("access_token");
+            if (!token) throw new Error("No access token available");
+            return await userService.getCurrentUser();
         } catch (error) {
             return rejectWithValue(error.message);
         }
@@ -76,6 +76,34 @@ export const updateUser = createAsyncThunk("user/updateUser", async (data) => {
     return await userService.updateUser(data);
 });
 
+// Replace the initializeAuth reducer with this async thunk
+export const initializeAuth = createAsyncThunk(
+    "user/initializeAuth",
+    async (_, { rejectWithValue }) => {
+        try {
+            const token = localStorage.getItem("access_token");
+            const userData = localStorage.getItem("user_data");
+
+            if (!token) {
+                return { isAuthenticated: false, user: null };
+            }
+
+            // Try to fetch current user to validate token
+            // If token is expired, axios interceptor will handle refresh automatically
+            const userResponse = await userService.getCurrentUser();
+
+            return {
+                isAuthenticated: true,
+                user: userResponse,
+            };
+        } catch (error) {
+            // If this fails, it means both access and refresh tokens are invalid
+            // Axios interceptor already cleared localStorage
+            return { isAuthenticated: false, user: null };
+        }
+    }
+);
+
 const userSlice = createSlice({
     name: "user",
     initialState: {
@@ -95,30 +123,25 @@ const userSlice = createSlice({
         clearError: (state) => {
             state.error = null;
         },
-        initializeAuth: (state) => {
-            const token = localStorage.getItem("access_token");
-            const userData = localStorage.getItem("user_data");
-
-            if (token && userData) {
-                try {
-                    const parsedUserData = JSON.parse(userData);
-                    state.isAuthenticated = true;
-                    state.info = parsedUserData; // Set complete user data
-                } catch (error) {
-                    console.error(
-                        "Error parsing user data from localStorage:",
-                        error
-                    );
-                    // Clear corrupted data
-                    localStorage.removeItem("user_data");
-                    localStorage.removeItem("access_token");
-                    localStorage.removeItem("userName");
-                }
-            }
-        },
+        // Remove the initializeAuth reducer since we're using async thunk
     },
     extraReducers: (builder) => {
         builder
+            // Add initializeAuth cases
+            .addCase(initializeAuth.pending, (state) => {
+                state.loading = true;
+            })
+            .addCase(initializeAuth.fulfilled, (state, action) => {
+                state.loading = false;
+                state.isAuthenticated = action.payload.isAuthenticated;
+                state.info = action.payload.user;
+            })
+            .addCase(initializeAuth.rejected, (state) => {
+                state.loading = false;
+                state.isAuthenticated = false;
+                state.info = null;
+            })
+
             // FETCH
             .addCase(fetchCurrentUser.pending, (state) => {
                 state.loading = true;
@@ -167,5 +190,6 @@ const userSlice = createSlice({
     },
 });
 
-export const { logout, clearError, initializeAuth } = userSlice.actions;
+// Remove initializeAuth from exports since it's now an async thunk
+export const { logout, clearError } = userSlice.actions;
 export default userSlice.reducer;
