@@ -7,6 +7,8 @@ import AuthLayout from "../pages/auth/AuthLayout.jsx";
 import Product from "../pages/user/Product.jsx";
 import Favorite from "../pages/user/Favorite.jsx";
 import ManageProducts from "../pages/user/ManageProducts.jsx";
+import PostProduct from "../pages/user/PostProduct.jsx";
+import EditProduct from "../pages/user/EditProduct.jsx";
 
 export const router = createBrowserRouter([
     {
@@ -17,6 +19,8 @@ export const router = createBrowserRouter([
             { path: "product/:productId", element: <Product /> },
             { path: "favorites", element: <Favorite /> },
             { path: "product-management", element: <ManageProducts /> },
+            { path: "post-product", element: <PostProduct /> },
+            { path: "edit-product/:productId", element: <EditProduct /> },
         ],
     },
     {

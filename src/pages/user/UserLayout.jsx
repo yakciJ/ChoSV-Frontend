@@ -40,7 +40,6 @@ export default function UserLayout() {
         dispatch(initializeAuth());
     }, [dispatch]);
 
-
     const navigate = useNavigate();
 
     const handleLogin = () => {
@@ -58,7 +57,7 @@ export default function UserLayout() {
         setIsDropdownOpen(false);
         navigate("/");
     };
-    
+
     useEffect(() => {
         const handleStorageChange = (e) => {
             if (e.key === "access_token" && !e.newValue) {
@@ -203,7 +202,7 @@ export default function UserLayout() {
                                     <ChevronRight className="flex items-center flex-shrink-0" />
                                 </Link>
                                 <Link
-                                    to="/"
+                                    to="post-product"
                                     className="flex items-center justify-between px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                                 >
                                     <div className="flex items-center gap-2">
@@ -213,7 +212,7 @@ export default function UserLayout() {
                                     <ChevronRight className="flex items-center flex-shrink-0" />
                                 </Link>
                                 <Link
-                                    to="/"
+                                    to="product-management"
                                     className="flex items-center justify-between px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                                 >
                                     <div className="flex items-center gap-2">
@@ -223,7 +222,7 @@ export default function UserLayout() {
                                     <ChevronRight className="flex items-center flex-shrink-0" />
                                 </Link>
                                 <Link
-                                    to="/"
+                                    to="favorites"
                                     className="flex items-center justify-between px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                                 >
                                     <div className="flex items-center gap-2">

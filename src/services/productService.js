@@ -49,3 +49,16 @@ export const getMyProduct = async (page = 1, pageSize = 10, status = null) => {
     });
     return response;
 };
+
+export const createProduct = async (productData) => {
+    const response = await axiosInstance.post(url, productData);
+    return response;
+};
+export const updateProduct = async (productId, productData) => {
+    const response = await axiosInstance.put(url + `${productId}`, productData);
+    return response;
+};
+export const deleteProduct = async (productId) => {
+    const response = await axiosInstance.delete(url + `${productId}`);
+    return response;
+};

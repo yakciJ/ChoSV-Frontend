@@ -6,3 +6,5 @@ export const getAllCategories = async () => {
     const response = await axiosInstance.get(url + "tree");
     return response;
 };
+
+
