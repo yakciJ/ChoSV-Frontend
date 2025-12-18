@@ -135,6 +135,17 @@ const userSlice = createSlice({
                 state.loading = false;
                 state.isAuthenticated = action.payload.isAuthenticated;
                 state.info = action.payload.user;
+
+                import("../services/chatService").then(({ chatSignalR }) => {
+                    chatSignalR
+                        .connect()
+                        .catch((err) =>
+                            console.error(
+                                "Failed to connect chat during auth init:",
+                                err
+                            )
+                        );
+                });
             })
             .addCase(initializeAuth.rejected, (state) => {
                 state.loading = false;
@@ -168,6 +179,17 @@ const userSlice = createSlice({
                 state.info = action.payload;
                 state.isAuthenticated = true;
                 state.error = null;
+
+                import("../services/chatService").then(({ chatSignalR }) => {
+                    chatSignalR
+                        .connect()
+                        .catch((err) =>
+                            console.error(
+                                "Failed to connect chat after login:",
+                                err
+                            )
+                        );
+                });
             })
             .addCase(loginUser.rejected, (state, action) => {
                 state.loading = false;
