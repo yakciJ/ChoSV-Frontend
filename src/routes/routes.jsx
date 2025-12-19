@@ -9,6 +9,7 @@ import Favorite from "../pages/user/Favorite.jsx";
 import ManageProducts from "../pages/user/ManageProducts.jsx";
 import PostProduct from "../pages/user/PostProduct.jsx";
 import EditProduct from "../pages/user/EditProduct.jsx";
+import Chat from "../pages/user/Chat.jsx";
 
 export const router = createBrowserRouter([
     {
@@ -21,6 +22,7 @@ export const router = createBrowserRouter([
             { path: "product-management", element: <ManageProducts /> },
             { path: "post-product", element: <PostProduct /> },
             { path: "edit-product/:productId", element: <EditProduct /> },
+            { path: "chat", element: <Chat /> },
         ],
     },
     {

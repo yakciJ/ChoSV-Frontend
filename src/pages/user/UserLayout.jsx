@@ -89,7 +89,7 @@ export default function UserLayout() {
     }, []);
 
     return (
-        <div className=" w-full bg-blue-100 flex flex-col text-blue-500">
+        <div className="w-full bg-blue-100 flex flex-col text-blue-500">
             <header className="sticky mb-8 top-0 left-0 right-0 bg-white flex-row flex p-3 items-center justify-between z-50">
                 <TextAlignJustify
                     className="ml-[1vw] flex-shrink-0 text-black"
@@ -139,10 +139,12 @@ export default function UserLayout() {
                                 size={24}
                             />
                         </Link>
-                        <MessageCircleMore
-                            className="text-gray-600 hover:text-blue-500 cursor-pointer"
-                            size={24}
-                        />
+                        <Link to="/chat">
+                            <MessageCircleMore
+                                className="text-gray-600 hover:text-blue-500 cursor-pointer"
+                                size={24}
+                            />
+                        </Link>
                         <Bell
                             className="text-gray-600 hover:text-yellow-500 cursor-pointer"
                             size={24}
