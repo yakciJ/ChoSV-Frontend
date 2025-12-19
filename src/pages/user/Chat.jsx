@@ -23,6 +23,16 @@ const Chat = () => {
     const { info: user } = useSelector((state) => state.user);
     const currentUserId = user?.userId;
 
+    // Avoid stale closure inside realtime callbacks
+    const selectedChatIdRef = useRef(null);
+    useEffect(() => {
+        selectedChatIdRef.current = selectedChat?.otherUserId ?? null;
+    }, [selectedChat]);
+
+    const scrollToBottom = () => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    };
+
     const loadRecentChats = async () => {
         try {
             const chats = await getRecentChats();
@@ -36,14 +46,12 @@ const Chat = () => {
         try {
             setLoading(true);
             const response = await getChatHistory(otherUserId);
-            // Extract the items array from the response
             setChatHistory((prev) => ({
                 ...prev,
                 [otherUserId]: response.items || [],
             }));
         } catch (error) {
             console.error("Error loading chat history:", error);
-            // Set empty array on error to prevent map error
             setChatHistory((prev) => ({
                 ...prev,
                 [otherUserId]: [],
@@ -93,22 +101,33 @@ const Chat = () => {
         });
     };
 
-    const setupSignalRListeners = () => {
-        chatSignalR.onReceiveMessage((message) => {
-            setChatHistory((prev) => ({
-                ...prev,
-                [message.senderId]: [
-                    ...(prev[message.senderId] || []),
-                    message,
-                ],
-            }));
-            updateRecentChatsWithNewMessage(message);
-            if (selectedChat?.otherUserId === message.senderId) {
-                setTimeout(scrollToBottom, 100);
-            }
-        });
+    // Load recent chats once (page data)
+    useEffect(() => {
+        loadRecentChats().catch(console.error);
+    }, []);
 
-        chatSignalR.onMessageSent((message) => {
+    // Subscribe to realtime events (NO SignalR .on here)
+    useEffect(() => {
+        const unsubReceive = chatSignalR.subscribe(
+            "ReceiveMessage",
+            (message) => {
+                setChatHistory((prev) => ({
+                    ...prev,
+                    [message.senderId]: [
+                        ...(prev[message.senderId] || []),
+                        message,
+                    ],
+                }));
+
+                updateRecentChatsWithNewMessage(message);
+
+                if (selectedChatIdRef.current === message.senderId) {
+                    setTimeout(scrollToBottom, 100);
+                }
+            }
+        );
+
+        const unsubSent = chatSignalR.subscribe("MessageSent", (message) => {
             setChatHistory((prev) => ({
                 ...prev,
                 [message.receiverId]: [
@@ -116,118 +135,60 @@ const Chat = () => {
                     message,
                 ],
             }));
+
             updateRecentChatsWithNewMessage(message);
             setTimeout(scrollToBottom, 100);
         });
 
-        chatSignalR.onMessageMarkedAsRead((data) => {
-            setChatHistory((prev) => {
-                const updated = { ...prev };
-                Object.keys(updated).forEach((userId) => {
-                    updated[userId] = updated[userId].map((msg) =>
-                        msg.messageId === data.messageId
-                            ? { ...msg, isRead: true }
-                            : msg
-                    );
+        const unsubRead = chatSignalR.subscribe(
+            "MessageMarkedAsRead",
+            (data) => {
+                setChatHistory((prev) => {
+                    const updated = { ...prev };
+                    Object.keys(updated).forEach((userId) => {
+                        updated[userId] = updated[userId].map((msg) =>
+                            msg.messageId === data.messageId
+                                ? { ...msg, isRead: true }
+                                : msg
+                        );
+                    });
+                    return updated;
                 });
-                return updated;
-            });
-        });
-
-        chatSignalR.onOnlineUsers((users) => {
-            setOnlineUsers(users || []);
-        });
-
-        chatSignalR.onUserOnline((userId) => {
-            setOnlineUsers((prev) => [...prev, userId]);
-        });
-
-        chatSignalR.onUserOffline((userId) => {
-            setOnlineUsers((prev) => prev.filter((id) => id !== userId));
-        });
-    };
-
-    useEffect(() => {
-        const initializeChat = async () => {
-            try {
-                setLoading(true);
-
-                // Wait for SignalR connection with timeout
-                const waitForConnection = async (
-                    maxAttempts = 10,
-                    delay = 1000
-                ) => {
-                    for (let i = 0; i < maxAttempts; i++) {
-                        if (chatSignalR.isConnected) {
-                            console.log("✅ SignalR already connected");
-                            return true;
-                        }
-
-                        console.log(
-                            `⏳ Waiting for SignalR connection... (${
-                                i + 1
-                            }/${maxAttempts})`
-                        );
-
-                        try {
-                            await chatSignalR.connect();
-                            if (chatSignalR.isConnected) {
-                                console.log(
-                                    "✅ SignalR connected successfully"
-                                );
-                                return true;
-                            }
-                        } catch (error) {
-                            console.warn(
-                                `❌ Connection attempt ${i + 1} failed:`,
-                                error
-                            );
-                        }
-
-                        // Wait before retry
-                        await new Promise((resolve) =>
-                            setTimeout(resolve, delay)
-                        );
-                    }
-
-                    console.error(
-                        "❌ Failed to establish SignalR connection after all attempts"
-                    );
-                    return false;
-                };
-
-                // Ensure connection is established
-                const isConnected = await waitForConnection();
-
-                if (isConnected) {
-                    await loadRecentChats();
-                    setupSignalRListeners();
-                    await chatSignalR.getOnlineUsers();
-                } else {
-                    console.warn(
-                        "⚠️ Running without real-time features (SignalR failed)"
-                    );
-                    await loadRecentChats();
-                }
-            } catch (error) {
-                console.error("Failed to initialize chat:", error);
-            } finally {
-                setLoading(false);
             }
-        };
+        );
 
-        initializeChat();
+        const unsubOnlineUsers = chatSignalR.subscribe(
+            "OnlineUsers",
+            (users) => {
+                setOnlineUsers(users || []);
+            }
+        );
+
+        const unsubUserOnline = chatSignalR.subscribe(
+            "UserOnline",
+            (userId) => {
+                setOnlineUsers((prev) =>
+                    prev.includes(userId) ? prev : [...prev, userId]
+                );
+            }
+        );
+
+        const unsubUserOffline = chatSignalR.subscribe(
+            "UserOffline",
+            (userId) => {
+                setOnlineUsers((prev) => prev.filter((id) => id !== userId));
+            }
+        );
 
         return () => {
-            console.log("🧹 Cleaning up SignalR listeners...");
-            chatSignalR.offAll("ReceiveMessage");
-            chatSignalR.offAll("MessageSent");
-            chatSignalR.offAll("MessageMarkedAsRead");
-            chatSignalR.offAll("OnlineUsers");
-            chatSignalR.offAll("UserOnline");
-            chatSignalR.offAll("UserOffline");
+            unsubReceive();
+            unsubSent();
+            unsubRead();
+            unsubOnlineUsers();
+            unsubUserOnline();
+            unsubUserOffline();
         };
-    }, []);
+    }, [currentUserId]);
 
     useEffect(() => {
         scrollToBottom();
@@ -274,14 +235,6 @@ const Chat = () => {
             handleSendMessage();
         }
     };
-
-    const scrollToBottom = () => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    };
-
-    useEffect(() => {
-        scrollToBottom();
-    }, [selectedChat]);
 
     const formatTime = (dateString) => {
         const date = new Date(dateString);
@@ -441,7 +394,11 @@ const Chat = () => {
                                             {selectedChat.otherUserFullName}
                                         </h3>
                                         <span className="text-sm text-green-500">
-                                            Đang hoạt động
+                                            {isUserOnline(
+                                                selectedChat.otherUserId
+                                            )
+                                                ? "Đang hoạt động"
+                                                : "Ngoại tuyến"}
                                         </span>
                                     </div>
                                 </div>

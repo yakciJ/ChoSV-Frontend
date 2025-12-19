@@ -9,10 +9,7 @@ const url = "/api/Chat/";
 
 export const getChatHistory = async (otherUserId, page = 1, pageSize = 50) => {
     const response = await axiosInstance.get(`${url}history/${otherUserId}`, {
-        params: {
-            page,
-            pageSize,
-        },
+        params: { page, pageSize },
     });
     return response;
 };
@@ -49,20 +46,11 @@ export const sendMessageRest = async (messageData) => {
 
 const getValidToken = async () => {
     const token = localStorage.getItem("access_token");
+    if (!token) throw new Error("No access token available");
 
-    if (!token) {
-        throw new Error("No access token available");
-    }
-
-    // Check if token is expired (you can decode JWT to check expiry)
-    // For now, we'll make a lightweight API call to validate the token
     try {
-        // Make a simple API call to validate token - this will trigger refresh if needed
-        await axiosInstance.get("/api/User/me", {
-            skipAuthRedirect: true, // Don't redirect on failure
-        });
-
-        // Return the token (which might have been refreshed by axios interceptor)
+        // This triggers refresh if your axios interceptor refreshes on 401
+        await axiosInstance.get("/api/User/me", { skipAuthRedirect: true });
         return localStorage.getItem("access_token");
     } catch (error) {
         localStorage.clear();
@@ -80,55 +68,162 @@ class ChatSignalRService {
         this.isConnected = false;
         this.reconnectAttempts = 0;
         this.maxReconnectAttempts = 5;
+
+        // App-level subscribers (pages subscribe here; SignalR attaches once)
+        this._subscribers = {
+            ReceiveMessage: new Set(),
+            MessageSent: new Set(),
+            MessageMarkedAsRead: new Set(),
+            OnlineUsers: new Set(),
+            UserOnline: new Set(),
+            UserOffline: new Set(),
+            Error: new Set(),
+            ConnectionState: new Set(),
+        };
+
+        // Track whether SignalR handlers are attached to the current connection instance
+        this._signalRHandlersAttached = false;
+    }
+
+    // Pages call this to listen to chat events
+    // returns an unsubscribe function
+    subscribe(eventName, handler) {
+        const bucket = this._subscribers[eventName];
+        if (!bucket) throw new Error(`Unknown chat event: ${eventName}`);
+
+        bucket.add(handler);
+        return () => bucket.delete(handler);
+    }
+
+    _emit(eventName, payload) {
+        const bucket = this._subscribers[eventName];
+        if (!bucket) return;
+
+        for (const fn of bucket) {
+            try {
+                fn(payload);
+            } catch (e) {
+                console.error(`Chat subscriber error in ${eventName}:`, e);
+            }
+        }
+    }
+
+    _attachSignalRHandlersOnce() {
+        if (!this.connection || this._signalRHandlersAttached) return;
+
+        // These are the ONLY SignalR .on registrations in the whole app:
+        this.connection.on("ReceiveMessage", (message) =>
+            this._emit("ReceiveMessage", message)
+        );
+        this.connection.on("MessageSent", (message) =>
+            this._emit("MessageSent", message)
+        );
+        this.connection.on("MessageMarkedAsRead", (data) =>
+            this._emit("MessageMarkedAsRead", data)
+        );
+        this.connection.on("OnlineUsers", (users) =>
+            this._emit("OnlineUsers", users || [])
+        );
+        this.connection.on("UserOnline", (userId) =>
+            this._emit("UserOnline", userId)
+        );
+        this.connection.on("UserOffline", (userId) =>
+            this._emit("UserOffline", userId)
+        );
+        this.connection.on("Error", (err) => this._emit("Error", err));
+
+        this._signalRHandlersAttached = true;
     }
 
     async connect() {
-        if (this.connection && this.isConnected) {
-            return;
-        }
+        // Already connected
+        if (this.connection && this.isConnected) return;
 
-        this.connection = new signalR.HubConnectionBuilder()
-            .withUrl(`${import.meta.env.VITE_BACKEND_URL}/chathub`, {
-                accessTokenFactory: async () => {
-                    try {
+        // Build connection if needed
+        if (!this.connection) {
+            this.connection = new signalR.HubConnectionBuilder()
+                .withUrl(`${import.meta.env.VITE_BACKEND_URL}/chathub`, {
+                    accessTokenFactory: async () => {
                         // Always get a fresh, valid token
                         return await getValidToken();
-                    } catch (error) {
-                        console.error(
-                            "Failed to get valid token for SignalR:",
-                            error
-                        );
-                        throw error;
+                    },
+                    transport:
+                        signalR.HttpTransportType.WebSockets |
+                        signalR.HttpTransportType.ServerSentEvents,
+                    skipNegotiation: false,
+                })
+                .withAutomaticReconnect({
+                    nextRetryDelayInMilliseconds: (retryContext) => {
+                        if (retryContext.previousRetryCount === 0) return 0;
+                        if (retryContext.previousRetryCount === 1) return 2000;
+                        if (retryContext.previousRetryCount === 2) return 10000;
+                        if (retryContext.previousRetryCount === 3) return 30000;
+                        return null;
+                    },
+                })
+                .configureLogging(signalR.LogLevel.Information)
+                .build();
+
+            // Attach handlers immediately once the connection object exists
+            this._signalRHandlersAttached = false;
+            this._attachSignalRHandlersOnce();
+
+            // Connection lifecycle events
+            this.connection.onreconnecting(() => {
+                this.isConnected = false;
+                this._emit("ConnectionState", { state: "reconnecting" });
+            });
+
+            this.connection.onreconnected(() => {
+                this.isConnected = true;
+                this.reconnectAttempts = 0;
+                this._emit("ConnectionState", { state: "reconnected" });
+            });
+
+            this.connection.onclose(async (error) => {
+                this.isConnected = false;
+                this._emit("ConnectionState", { state: "closed", error });
+
+                if (
+                    error &&
+                    (error.message?.includes("Unauthorized") ||
+                        error.statusCode === 401)
+                ) {
+                    localStorage.clear();
+                    if (window.__store) {
+                        window.__store.dispatch({ type: "RESET_STORE" });
                     }
-                },
-                transport:
-                    signalR.HttpTransportType.WebSockets |
-                    signalR.HttpTransportType.ServerSentEvents,
-                skipNegotiation: false,
-            })
-            .withAutomaticReconnect({
-                nextRetryDelayInMilliseconds: (retryContext) => {
-                    // Custom retry logic
-                    if (retryContext.previousRetryCount === 0) return 0;
-                    if (retryContext.previousRetryCount === 1) return 2000;
-                    if (retryContext.previousRetryCount === 2) return 10000;
-                    if (retryContext.previousRetryCount === 3) return 30000;
-                    return null; // Stop retrying after 4 attempts
-                },
-            })
-            .configureLogging(signalR.LogLevel.Information)
-            .build();
+                    return;
+                }
+
+                // Manual reconnect fallback
+                if (this.reconnectAttempts < this.maxReconnectAttempts) {
+                    setTimeout(async () => {
+                        this.reconnectAttempts++;
+                        try {
+                            await this.connect();
+                        } catch (reconnectError) {
+                            console.error(
+                                "Manual reconnect failed:",
+                                reconnectError
+                            );
+                        }
+                    }, 5000);
+                }
+            });
+        }
 
         try {
             await this.connection.start();
             this.isConnected = true;
             this.reconnectAttempts = 0;
+            this._emit("ConnectionState", { state: "connected" });
             console.log("Chat SignalR Connected");
         } catch (error) {
             console.error("Chat SignalR Connection Error:", error);
             this.isConnected = false;
+            this._emit("ConnectionState", { state: "connect_failed", error });
 
-            // If connection failed due to auth, clear tokens and throw
             if (
                 error.message?.includes("Unauthorized") ||
                 error.statusCode === 401
@@ -138,54 +233,6 @@ class ChatSignalRService {
             }
             throw error;
         }
-
-        // Handle connection events
-        this.connection.onreconnecting(() => {
-            console.log("Chat SignalR Reconnecting...");
-            this.isConnected = false;
-        });
-
-        this.connection.onreconnected(() => {
-            console.log("Chat SignalR Reconnected");
-            this.isConnected = true;
-            this.reconnectAttempts = 0;
-        });
-
-        this.connection.onclose(async (error) => {
-            console.log("Chat SignalR Disconnected", error);
-            this.isConnected = false;
-
-            // If disconnection was due to authentication, don't retry
-            if (
-                error &&
-                (error.message?.includes("Unauthorized") ||
-                    error.statusCode === 401)
-            ) {
-                console.log(
-                    "SignalR disconnected due to authentication failure"
-                );
-                localStorage.clear();
-                if (window.__store) {
-                    window.__store.dispatch({ type: "RESET_STORE" });
-                }
-                return;
-            }
-
-            // Manual reconnect fallback with token refresh
-            if (this.reconnectAttempts < this.maxReconnectAttempts) {
-                setTimeout(async () => {
-                    this.reconnectAttempts++;
-                    try {
-                        await this.connect(); // This will get a fresh token
-                    } catch (reconnectError) {
-                        console.error(
-                            "Manual reconnect failed:",
-                            reconnectError
-                        );
-                    }
-                }, 5000);
-            }
-        });
     }
 
     async disconnect() {
@@ -198,6 +245,8 @@ class ChatSignalRService {
             this.connection = null;
             this.isConnected = false;
             this.reconnectAttempts = 0;
+            this._signalRHandlersAttached = false;
+            this._emit("ConnectionState", { state: "disconnected" });
         }
     }
 
@@ -215,17 +264,12 @@ class ChatSignalRService {
         } catch (error) {
             console.error("Error sending message via SignalR:", error);
 
-            // If error is due to authentication, try to reconnect with fresh token
             if (
                 error.message?.includes("Unauthorized") ||
                 error.statusCode === 401
             ) {
-                console.log(
-                    "SendMessage failed due to auth, attempting reconnect..."
-                );
                 await this.disconnect();
                 await this.connect();
-                // Retry the message after reconnection
                 await this.connection.invoke("SendMessage", {
                     receiverId,
                     content,
@@ -246,7 +290,6 @@ class ChatSignalRService {
         } catch (error) {
             console.error("Error marking message as read:", error);
 
-            // Handle auth errors similar to sendMessage
             if (
                 error.message?.includes("Unauthorized") ||
                 error.statusCode === 401
@@ -273,61 +316,36 @@ class ChatSignalRService {
         }
     }
 
-    // Event listeners (same as before)
+    // NOTE: Keep these for backward compatibility (optional),
+    // but you should stop using them in Chat.jsx.
     onReceiveMessage(callback) {
-        if (this.connection) {
-            this.connection.on("ReceiveMessage", callback);
-        }
+        if (this.connection) this.connection.on("ReceiveMessage", callback);
     }
-
     onMessageSent(callback) {
-        if (this.connection) {
-            this.connection.on("MessageSent", callback);
-        }
+        if (this.connection) this.connection.on("MessageSent", callback);
     }
-
     onMessageMarkedAsRead(callback) {
-        if (this.connection) {
+        if (this.connection)
             this.connection.on("MessageMarkedAsRead", callback);
-        }
     }
-
     onUserOnline(callback) {
-        if (this.connection) {
-            this.connection.on("UserOnline", callback);
-        }
+        if (this.connection) this.connection.on("UserOnline", callback);
     }
-
     onUserOffline(callback) {
-        if (this.connection) {
-            this.connection.on("UserOffline", callback);
-        }
+        if (this.connection) this.connection.on("UserOffline", callback);
     }
-
     onOnlineUsers(callback) {
-        if (this.connection) {
-            this.connection.on("OnlineUsers", callback);
-        }
+        if (this.connection) this.connection.on("OnlineUsers", callback);
     }
-
     onError(callback) {
-        if (this.connection) {
-            this.connection.on("Error", callback);
-        }
+        if (this.connection) this.connection.on("Error", callback);
     }
 
-    // Remove specific event listener
     off(eventName, callback) {
-        if (this.connection) {
-            this.connection.off(eventName, callback);
-        }
+        if (this.connection) this.connection.off(eventName, callback);
     }
-
-    // Remove all listeners for an event
     offAll(eventName) {
-        if (this.connection) {
-            this.connection.off(eventName);
-        }
+        if (this.connection) this.connection.off(eventName);
     }
 }
 
@@ -340,15 +358,12 @@ export const chatSignalR = new ChatSignalRService();
 
 export const sendMessage = async (receiverId, content) => {
     try {
-        // Try SignalR first
         if (chatSignalR.isConnected) {
             await chatSignalR.sendMessage(receiverId, content);
         } else {
-            // Fallback to REST API
             await sendMessageRest({ receiverId, content });
         }
     } catch (error) {
-        // If SignalR fails, try REST API as fallback
         console.warn("SignalR send failed, trying REST API fallback:", error);
         await sendMessageRest({ receiverId, content });
     }
@@ -356,15 +371,12 @@ export const sendMessage = async (receiverId, content) => {
 
 export const markAsRead = async (messageId) => {
     try {
-        // Try SignalR first
         if (chatSignalR.isConnected) {
             await chatSignalR.markAsRead(messageId);
         } else {
-            // Fallback to REST API
             await markAsReadRest(messageId);
         }
     } catch (error) {
-        // If SignalR fails, try REST API as fallback
         console.warn(
             "SignalR markAsRead failed, trying REST API fallback:",
             error
