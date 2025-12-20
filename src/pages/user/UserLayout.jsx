@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { initializeAuth } from "../../store/userSlice";
+import { initializeAuth, logoutUser } from "../../store/userSlice";
 import { useNavigate } from "react-router-dom";
 import { useRef } from "react";
 
@@ -50,10 +50,10 @@ export default function UserLayout() {
         setIsDropdownOpen(!isDropdownOpen);
     };
 
-    const handleLogout = () => {
+    const handleLogout = async () => {
         localStorage.clear();
         dispatch({ type: "RESET_STORE" });
-        dispatch({ type: "user/logout" });
+        await dispatch(logoutUser());
         setIsDropdownOpen(false);
         navigate("/");
     };
@@ -62,7 +62,7 @@ export default function UserLayout() {
         const handleStorageChange = (e) => {
             if (e.key === "access_token" && !e.newValue) {
                 dispatch({ type: "RESET_STORE" });
-                dispatch({ type: "user/logout" });
+                dispatch(logoutUser());
             }
         };
 

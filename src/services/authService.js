@@ -5,7 +5,6 @@ const url = "/api/User/";
 
 export const login = async (credentials) => {
     const response = await axiosInstance.post(`${url}login`, credentials);
-    console.log("authService login response:", response);
     return response;
 };
 export const register = async (userInfo) => {
@@ -16,6 +15,7 @@ export const logout = async () => {
     const response = await axiosInstance.post(`${url}logout`);
     return response;
 };
+
 const axiosNoAuth = axios.create({
     baseURL: import.meta.env.VITE_BACKEND_URL,
     withCredentials: true,

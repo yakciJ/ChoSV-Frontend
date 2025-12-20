@@ -16,6 +16,24 @@ export const fetchCurrentUser = createAsyncThunk(
     }
 );
 
+export const logoutUser = createAsyncThunk(
+    "user/logoutUser",
+    async (_, { rejectWithValue }) => {
+        try {
+            await authService.logout();
+            return true;
+        } catch (error) {
+            return rejectWithValue(
+                error.response?.data?.error || error.message || "Logout failed"
+            );
+        } finally {
+            localStorage.removeItem("access_token");
+            localStorage.removeItem("userName");
+            localStorage.removeItem("user_data");
+        }
+    }
+);
+
 export const loginUser = createAsyncThunk(
     "user/loginUser",
     async (credentials, { rejectWithValue }) => {
@@ -123,7 +141,6 @@ const userSlice = createSlice({
         clearError: (state) => {
             state.error = null;
         },
-        // Remove the initializeAuth reducer since we're using async thunk
     },
     extraReducers: (builder) => {
         builder
