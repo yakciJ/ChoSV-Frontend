@@ -7,9 +7,13 @@ import {
     sendMessage,
     chatSignalR,
 } from "../../services/chatService.js";
+import { getUser } from "../../services/userService.js";
 import { useSelector } from "react-redux";
+import { useParams, useNavigate } from "react-router-dom";
 
 const Chat = () => {
+    const { routeUserName } = useParams();
+    const navigate = useNavigate();
     const [selectedChat, setSelectedChat] = useState(null);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [newMessage, setNewMessage] = useState("");
@@ -61,11 +65,68 @@ const Chat = () => {
         }
     };
 
-    const updateRecentChatsWithNewMessage = (message) => {
+    const selectChatByUserName = async (userName) => {
+        try {
+            setLoading(true);
+            const userInfo = await getUser(userName);
+
+            const chatData = {
+                otherUserId: userInfo.userId,
+                otherUserName: userInfo.userName,
+                otherUserFullName: userInfo.fullName,
+                otherUserAvatar: userInfo.avatarImage,
+            };
+
+            setSelectedChat(chatData);
+            setIsSidebarOpen(false);
+
+            // Update URL to reflect the selected chat
+            navigate(`/chat/${userName}`, { replace: true });
+
+            // Load chat history
+            await loadChatHistory(userInfo.userId);
+
+            // Mark unread messages as read
+            const unreadMessages =
+                chatHistory[userInfo.userId]?.filter(
+                    (msg) => !msg.isRead && msg.senderId !== currentUserId
+                ) || [];
+
+            for (const message of unreadMessages) {
+                try {
+                    await markAsRead(message.messageId);
+                } catch (error) {
+                    console.error("Failed to mark message as read:", error);
+                }
+            }
+        } catch (error) {
+            console.error("Error fetching user info:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const updateRecentChatsWithNewMessage = async (message) => {
         const otherUserId =
             message.senderId === currentUserId
                 ? message.receiverId
                 : message.senderId;
+
+        // Try to get user info for the other user to have complete data
+        let otherUserInfo = null;
+        try {
+            // Get the username from the message based on who the "other" user is
+            const otherUserName =
+                message.senderId === currentUserId
+                    ? message.receiverUserName
+                    : message.senderUserName;
+
+            if (otherUserName) {
+                otherUserInfo = await getUser(otherUserName);
+            }
+        } catch (error) {
+            console.error("Error fetching user info for new message:", error);
+        }
 
         setRecentChats((prev) => {
             const existingChatIndex = prev.findIndex(
@@ -79,6 +140,12 @@ const Chat = () => {
                     content: message.content,
                     createdDate: message.createdDate,
                     isRead: message.senderId === currentUserId ? true : false,
+                    // Update user info if we have it
+                    ...(otherUserInfo && {
+                        otherUserName: otherUserInfo.userName,
+                        otherUserFullName: otherUserInfo.fullName,
+                        otherUserAvatar: otherUserInfo.avatarImage,
+                    }),
                 };
 
                 const [updatedChat] = updatedChats.splice(existingChatIndex, 1);
@@ -92,8 +159,15 @@ const Chat = () => {
                     createdDate: message.createdDate,
                     isRead: message.senderId === currentUserId ? true : false,
                     otherUserId: otherUserId,
-                    otherUserFullName: message.senderUserName || "Unknown User",
-                    otherUserAvatar: null,
+                    otherUserName:
+                        otherUserInfo?.userName ||
+                        (message.senderId === currentUserId
+                            ? message.receiverUserName
+                            : message.senderUserName) ||
+                        "unknown",
+                    otherUserFullName:
+                        otherUserInfo?.fullName || "Unknown User",
+                    otherUserAvatar: otherUserInfo?.avatarImage || null,
                 };
 
                 return [newChat, ...prev];
@@ -105,6 +179,13 @@ const Chat = () => {
     useEffect(() => {
         loadRecentChats().catch(console.error);
     }, []);
+
+    // Handle route userName parameter
+    useEffect(() => {
+        if (routeUserName && currentUserId) {
+            selectChatByUserName(routeUserName);
+        }
+    }, [routeUserName, currentUserId]);
 
     // Subscribe to realtime events (NO SignalR .on here)
     useEffect(() => {
@@ -195,25 +276,12 @@ const Chat = () => {
     }, [chatHistory, selectedChat]);
 
     const handleChatSelect = async (chat) => {
-        setSelectedChat(chat);
-        setIsSidebarOpen(false);
-
-        if (!chatHistory[chat.otherUserId]) {
-            await loadChatHistory(chat.otherUserId);
+        // Make sure we have otherUserName before proceeding
+        if (!chat.otherUserName) {
+            console.error("No otherUserName found for chat:", chat);
+            return;
         }
-
-        const unreadMessages =
-            chatHistory[chat.otherUserId]?.filter(
-                (msg) => !msg.isRead && msg.senderId !== currentUserId
-            ) || [];
-
-        for (const message of unreadMessages) {
-            try {
-                await markAsRead(message.messageId);
-            } catch (error) {
-                console.error("Failed to mark message as read:", error);
-            }
-        }
+        await selectChatByUserName(chat.otherUserName);
     };
 
     const handleSendMessage = async () => {
@@ -257,6 +325,9 @@ const Chat = () => {
     const isUserOnline = (userId) => {
         return onlineUsers.includes(userId);
     };
+
+    const hasMessages =
+        selectedChat && chatHistory[selectedChat.otherUserId]?.length > 0;
 
     if (loading) {
         return (
@@ -311,8 +382,15 @@ const Chat = () => {
                                             ? "bg-blue-50 border-r-4 border-r-blue-500"
                                             : ""
                                     }
+                                    ${
+                                        !chat.otherUserName
+                                            ? "opacity-50 cursor-not-allowed"
+                                            : ""
+                                    }
                                 `}
-                                onClick={() => handleChatSelect(chat)}
+                                onClick={() =>
+                                    chat.otherUserName && handleChatSelect(chat)
+                                }
                             >
                                 <div className="relative mr-3">
                                     {chat.otherUserAvatar ? (
@@ -336,6 +414,11 @@ const Chat = () => {
                                 <div className="flex-1 min-w-0">
                                     <div className="font-semibold text-gray-900 truncate">
                                         {chat.otherUserFullName}
+                                        {!chat.otherUserName && (
+                                            <span className="text-red-500 text-xs ml-1">
+                                                (No username)
+                                            </span>
+                                        )}
                                     </div>
                                     <div className="text-sm text-gray-500 truncate">
                                         {chat.content.length > 30
@@ -406,52 +489,68 @@ const Chat = () => {
 
                             {/* Messages Area */}
                             <div className="flex-1 overflow-y-auto p-6 space-y-4">
-                                {chatHistory[selectedChat.otherUserId]?.map(
-                                    (message) => (
-                                        <div
-                                            key={message.messageId}
-                                            className={`flex ${
-                                                message.senderId ===
-                                                currentUserId
-                                                    ? "justify-end"
-                                                    : "justify-start"
-                                            }`}
-                                        >
+                                {hasMessages ? (
+                                    chatHistory[selectedChat.otherUserId]?.map(
+                                        (message) => (
                                             <div
-                                                className={`max-w-xs lg:max-w-md ${
+                                                key={message.messageId}
+                                                className={`flex ${
                                                     message.senderId ===
                                                     currentUserId
-                                                        ? "order-2"
-                                                        : "order-1"
+                                                        ? "justify-end"
+                                                        : "justify-start"
                                                 }`}
                                             >
                                                 <div
-                                                    className={`
-                        px-4 py-2 rounded-2xl
-                        ${
-                            message.senderId === currentUserId
-                                ? "bg-blue-500 text-white rounded-br-sm"
-                                : "bg-gray-100 text-gray-900 rounded-bl-sm"
-                        }
-                      `}
-                                                >
-                                                    {message.content}
-                                                </div>
-                                                <div
-                                                    className={`text-xs text-gray-500 mt-1 ${
+                                                    className={`max-w-xs lg:max-w-md ${
                                                         message.senderId ===
                                                         currentUserId
-                                                            ? "text-right"
-                                                            : "text-left"
+                                                            ? "order-2"
+                                                            : "order-1"
                                                     }`}
                                                 >
-                                                    {formatTime(
-                                                        message.createdDate
-                                                    )}
+                                                    <div
+                                                        className={`
+                            px-4 py-2 rounded-2xl
+                            ${
+                                message.senderId === currentUserId
+                                    ? "bg-blue-500 text-white rounded-br-sm"
+                                    : "bg-gray-100 text-gray-900 rounded-bl-sm"
+                            }
+                          `}
+                                                    >
+                                                        {message.content}
+                                                    </div>
+                                                    <div
+                                                        className={`text-xs text-gray-500 mt-1 ${
+                                                            message.senderId ===
+                                                            currentUserId
+                                                                ? "text-right"
+                                                                : "text-left"
+                                                        }`}
+                                                    >
+                                                        {formatTime(
+                                                            message.createdDate
+                                                        )}
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
+                                        )
                                     )
+                                ) : (
+                                    <div className="flex items-center justify-center h-full">
+                                        <div className="text-center">
+                                            <MessageCircle
+                                                size={48}
+                                                className="mx-auto text-gray-400 mb-4"
+                                            />
+                                            <p className="text-gray-500">
+                                                Chưa có tin nhắn nào, hãy gửi
+                                                lời chào cho{" "}
+                                                {selectedChat.otherUserFullName}
+                                            </p>
+                                        </div>
+                                    </div>
                                 )}
                                 <div ref={messagesEndRef} />
                             </div>

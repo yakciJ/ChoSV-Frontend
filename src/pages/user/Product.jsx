@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useParams } from "react-router-dom";
 import { getProduct } from "../../services/productService";
 import { formatVND } from "../../helpers/formatPrice";
@@ -87,6 +87,12 @@ export default function Product() {
         }
     };
 
+    const navigate = useNavigate();
+
+    const toUserProfile = (userName) => {
+        navigate(`/profile/${userName}`);
+    };
+
     const fetchPopularProducts = async () => {
         try {
             const response = await getPopularProducts();
@@ -172,10 +178,10 @@ export default function Product() {
         }
     };
 
-    const fetchUserWallPosts = async (userId, pageIndex, pageSize) => {
+    const fetchUserWallPosts = async (userName, pageIndex, pageSize) => {
         try {
             const response = await getUserWallPosts(
-                userId,
+                userName,
                 pageIndex,
                 pageSize
             );
@@ -198,7 +204,7 @@ export default function Product() {
 
     useEffect(() => {
         if (product?.sellerId) {
-            fetchUserWallPosts(product.sellerId, 1, 2);
+            fetchUserWallPosts(product.sellerName, 1, 2);
         }
     }, [product]);
 
@@ -338,7 +344,13 @@ export default function Product() {
                                 {formatDateLocal(product?.createdDate)}
                             </span>
                         </div>
-                        <button className="mt-8 bg-blue-500 text-white px-6 py-3 rounded-md hover:bg-blue-600 transition w-full">
+                        <button
+                            className="mt-8 bg-blue-500 text-white px-6 py-3 rounded-md hover:bg-blue-600 transition w-full"
+                            onClick={() => {
+                                if (!product?.sellerId) return;
+                                navigate(`/chat/${product.sellerName}`);
+                            }}
+                        >
                             Liên hệ người bán
                         </button>
                         {/* thong tin nguoi ban */}
@@ -360,7 +372,12 @@ export default function Product() {
                                     </span>
                                 </div>
                                 <div className="ml-auto">
-                                    <button className="bg-blue-500 text-sm text-white rounded-md hover:bg-blue-600 transition">
+                                    <button
+                                        onClick={() =>
+                                            toUserProfile(product?.sellerName)
+                                        }
+                                        className="bg-blue-500 text-sm text-white rounded-md hover:bg-blue-600 transition"
+                                    >
                                         Xem trang cá nhân
                                     </button>
                                 </div>
@@ -414,7 +431,7 @@ export default function Product() {
                         <h2 className="text-2xl font-semibold">Đánh giá</h2>
                         <Link
                             className="flex text-xl font-semibold ml-auto text-blue-500 hover:underline hover:text-blue-500"
-                            to={`/user/${product?.sellerName}`}
+                            to={`/profile/${product?.sellerName}`}
                         >
                             <div>Xem thêm</div>
                             <ChevronLeft className="rotate-180 self-center" />

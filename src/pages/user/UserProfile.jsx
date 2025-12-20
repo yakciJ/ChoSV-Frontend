@@ -1,22 +1,27 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useSelector } from "react-redux";
-import { Calendar, Mail, MapPin, Phone, User } from "lucide-react";
+import {
+    Calendar,
+    Mail,
+    MapPin,
+    Phone,
+    MoreVertical,
+    Flag,
+    Edit,
+} from "lucide-react";
+import { formatDateLocal } from "../../helpers/formatDate";
 
 import ProductCarousel from "../../components/ProductCarousel";
-
-const formatDateTime = (iso) => {
-    if (!iso) return "";
-    const d = new Date(iso);
-    if (Number.isNaN(d.getTime())) return iso;
-    return d.toLocaleString("vi-VN", {
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-        hour: "2-digit",
-        minute: "2-digit",
-    });
-};
+import ProfileEditModal from "../../components/ProfileEditModal";
+import { getUser } from "../../services/userService";
+import { getUserProducts } from "../../services/productService";
+import {
+    createUserWallPost,
+    deleteUserWallPost,
+    getUserWallPosts,
+    updateUserWallPost,
+} from "../../services/userWallPostService";
 
 const displayName = (profile) =>
     (profile?.fullName && profile.fullName.trim()) ||
@@ -40,88 +45,10 @@ const EmptyAvatar = ({ name }) => {
     );
 };
 
-const MOCK_PROFILE = {
-    userId: "7ab31d6e-069b-47ab-8508-f8c80b54357c",
-    userName: "trung",
-    fullName: "NTr",
-    email: "trungdzlhp@gmail.com",
-    phoneNumber: "0355514203",
-    avatarImage: null,
-    bio: " ",
-    address: "18 Cầu Đơ, Hà Đông, Hà Nội",
-    createdAt: "2025-12-11T11:06:57.540894Z",
-};
-
-const MOCK_WALL_RESPONSE = {
-    items: [
-        {
-            userWallPostId: 1,
-            userWallOwnerId: "12c6daa1-cee5-4575-8213-639a49ef4233",
-            posterId: "12c6daa1-cee5-4575-8213-639a49ef4233",
-            posterAvatarImage:
-                "https://localhost:7049/images/4779e573-9465-41ee-90de-f680ea17a7cd.jpg",
-            posterUserName: "admin",
-            posterFullName: "Đỗ Đăng Huy",
-            commentContent: "Alo testing testing",
-            createdAt: "2025-12-04T16:29:01.219348Z",
-        },
-        {
-            userWallPostId: 2,
-            userWallOwnerId: "12c6daa1-cee5-4575-8213-639a49ef4233",
-            posterId: "7ab31d6e-069b-47ab-8508-f8c80b54357c",
-            posterAvatarImage: null,
-            posterUserName: "trung",
-            posterFullName: "NTr",
-            commentContent: "Mình là chủ profile, comment thử.",
-            createdAt: "2025-12-05T09:10:11.219348Z",
-        },
-    ],
-    totalCount: 2,
-    page: 1,
-    pageSize: 10,
-    totalPages: 1,
-    hasPrevious: false,
-    hasNext: false,
-};
-
-// Minimal mock products for ProductCard (adjust fields if your ProductCard needs more)
-const MOCK_PRODUCTS = [
-    {
-        productId: 101,
-        productName: "Tai nghe Bluetooth",
-        price: 150000,
-        imageUrls: ["https://picsum.photos/seed/p101/600/400"],
-    },
-    {
-        productId: 102,
-        productName: "Sách lập trình",
-        price: 90000,
-        imageUrls: ["https://picsum.photos/seed/p102/600/400"],
-    },
-    {
-        productId: 103,
-        productName: "Bàn phím cơ",
-        price: 450000,
-        imageUrls: ["https://picsum.photos/seed/p103/600/400"],
-    },
-    {
-        productId: 104,
-        productName: "Chuột gaming",
-        price: 220000,
-        imageUrls: ["https://picsum.photos/seed/p104/600/400"],
-    },
-    {
-        productId: 105,
-        productName: "Màn hình 24 inch",
-        price: 2100000,
-        imageUrls: ["https://picsum.photos/seed/p105/600/400"],
-    },
-];
-
 export default function UserProfile() {
-    const { userId } = useParams();
+    // route: /profile/:userName
+    const { userName } = useParams();
 
-    // if you don't have auth wired, this still works with mock
     const { info: currentUser, isAuthenticated } = useSelector(
         (state) => state.user
     );
@@ -129,12 +56,14 @@ export default function UserProfile() {
 
     const [profile, setProfile] = useState(null);
     const [profileLoading, setProfileLoading] = useState(true);
+    const [profileError, setProfileError] = useState(null);
 
     const [products, setProducts] = useState([]);
     const [productsLoading, setProductsLoading] = useState(false);
 
     const [posts, setPosts] = useState([]);
     const [postsLoading, setPostsLoading] = useState(false);
+    const [postsError, setPostsError] = useState(null);
 
     const [page, setPage] = useState(1);
     const [totalCount, setTotalCount] = useState(0);
@@ -148,44 +77,119 @@ export default function UserProfile() {
     const [editingValue, setEditingValue] = useState("");
     const [savingEdit, setSavingEdit] = useState(false);
 
-    // Steam-ish: keep list newest-first, and auto scroll to new posts
-    const listTopRef = useRef(null);
+    // Dropdown and modal states
+    const [showDropdown, setShowDropdown] = useState(false);
+    const [showEditModal, setShowEditModal] = useState(false);
 
+    const listTopRef = useRef(null);
+    const dropdownRef = useRef(null);
+
+    // Once we have profile, we can compute ownership correctly
     const isOwnerProfile = Boolean(
-        currentUserId && userId && currentUserId === userId
+        currentUserId && profile?.userId && currentUserId === profile.userId
     );
 
     const name = displayName(profile);
 
-    // MOCK load
+    // Close dropdown when clicking outside
     useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (
+                dropdownRef.current &&
+                !dropdownRef.current.contains(event.target)
+            ) {
+                setShowDropdown(false);
+            }
+        };
+
+        document.addEventListener("mousedown", handleClickOutside);
+        return () =>
+            document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+    const fetchProfile = async () => {
+        if (!userName) return;
         setProfileLoading(true);
-        setProductsLoading(true);
-        setPostsLoading(true);
-
-        const t = setTimeout(() => {
-            // profile
-            setProfile({
-                ...MOCK_PROFILE,
-                userId: userId || MOCK_PROFILE.userId,
-            });
+        setProfileError(null);
+        try {
+            // axiosInstance returns response.data already
+            const res = await getUser(userName);
+            setProfile(res);
+        } catch (e) {
+            console.error(e);
+            setProfileError("Không thể tải hồ sơ người dùng.");
+            setProfile(null);
+        } finally {
             setProfileLoading(false);
+        }
+    };
 
-            // products
-            setProducts(MOCK_PRODUCTS);
+    const fetchProducts = async () => {
+        if (!userName) return;
+        setProductsLoading(true);
+        try {
+            // axiosInstance returns response.data already
+            const res = await getUserProducts(userName, 1, 12);
+
+            // tolerate either {items: []} or [] response
+            const items = Array.isArray(res) ? res : res?.items || [];
+            setProducts(items);
+        } catch (e) {
+            console.error(e);
+            setProducts([]);
+        } finally {
             setProductsLoading(false);
+        }
+    };
 
-            // posts
-            setPosts(MOCK_WALL_RESPONSE.items);
-            setTotalCount(MOCK_WALL_RESPONSE.totalCount);
+    const fetchWallPosts = async () => {
+        if (!userName) return;
+        setPostsLoading(true);
+        setPostsError(null);
+        try {
+            // axiosInstance returns response.data already
+            const res = await getUserWallPosts(userName, page, pageSize);
+            setPosts(res?.items || []);
+            setTotalCount(res?.totalCount || 0);
+        } catch (e) {
+            console.error(e);
+            setPostsError("Không thể tải bình luận.");
+            setPosts([]);
+            setTotalCount(0);
+        } finally {
             setPostsLoading(false);
-        }, 250);
+        }
+    };
 
-        return () => clearTimeout(t);
-    }, [userId]);
+    const handleProfileUpdate = () => {
+        fetchProfile();
+        setShowEditModal(false);
+        setShowDropdown(false);
+    };
+
+    const handleReport = () => {
+        setShowDropdown(false);
+        alert("Tính năng báo cáo sẽ được triển khai sau.");
+    };
+
+    const handleEditProfile = () => {
+        setShowDropdown(false);
+        setShowEditModal(true);
+    };
+
+    useEffect(() => {
+        setPage(1);
+        fetchProfile();
+        fetchProducts();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [userName]);
+
+    useEffect(() => {
+        fetchWallPosts();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [userName, page]);
 
     const canEditOrDelete = (post) => {
-        // own comment only
         if (!currentUserId) return false;
         return post?.posterId === currentUserId;
     };
@@ -194,31 +198,25 @@ export default function UserProfile() {
         if (!isAuthenticated) return;
         const content = newContent.trim();
         if (!content || submitting) return;
+        if (!profile?.userId) return;
 
         setSubmitting(true);
         try {
-            // mock create
-            const nowIso = new Date().toISOString();
-            const newPost = {
-                userWallPostId: Date.now(),
-                userWallOwnerId: profile?.userId,
-                posterId: currentUserId,
-                posterAvatarImage: currentUser?.avatarImage ?? null,
-                posterUserName: currentUser?.userName ?? "me",
-                posterFullName: currentUser?.fullName ?? "",
+            await createUserWallPost({
+                userWallOwnerId: profile.userId,
                 commentContent: content,
-                createdAt: nowIso,
-            };
+            });
 
-            // add to top
-            setPosts((prev) => [newPost, ...prev]);
-            setTotalCount((c) => c + 1);
             setNewContent("");
             setPage(1);
+            await fetchWallPosts();
 
             requestAnimationFrame(() => {
                 listTopRef.current?.scrollIntoView({ behavior: "smooth" });
             });
+        } catch (e) {
+            console.error(e);
+            alert("Không thể đăng bình luận.");
         } finally {
             setSubmitting(false);
         }
@@ -234,51 +232,71 @@ export default function UserProfile() {
         setEditingValue("");
     };
 
-    const saveEdit = async (postId) => {
+    const saveEdit = async (post) => {
         const content = editingValue.trim();
         if (!content || savingEdit) return;
 
         setSavingEdit(true);
         try {
-            // mock update
-            setPosts((prev) =>
-                prev.map((p) =>
-                    p.userWallPostId === postId
-                        ? { ...p, commentContent: content }
-                        : p
-                )
-            );
+            await updateUserWallPost({
+                userWallPostId: post.userWallPostId,
+                commentContent: content,
+            });
+
             setEditingId(null);
             setEditingValue("");
+            await fetchWallPosts();
+        } catch (e) {
+            console.error(e);
+            alert("Không thể cập nhật bình luận.");
         } finally {
             setSavingEdit(false);
         }
     };
 
-    const removePost = async (postId) => {
+    const removePost = async (post) => {
         const ok = window.confirm("Xóa bình luận này?");
         if (!ok) return;
 
-        // mock delete
-        setPosts((prev) => prev.filter((p) => p.userWallPostId !== postId));
-        setTotalCount((c) => Math.max(0, c - 1));
+        try {
+            await deleteUserWallPost(post.userWallPostId);
+
+            // if deleting last item, keep page valid
+            const nextCount = Math.max(0, totalCount - 1);
+            const nextTotalPages = Math.max(1, Math.ceil(nextCount / pageSize));
+            if (page > nextTotalPages) {
+                setPage(nextTotalPages);
+            } else {
+                await fetchWallPosts();
+            }
+        } catch (e) {
+            console.error(e);
+            alert("Không thể xóa bình luận.");
+        }
     };
 
     const handlePageChange = (newPage) => {
         if (newPage >= 1 && newPage <= totalPages) setPage(newPage);
     };
 
-    // Mock pagination: slice current "posts" list
-    const pagedPosts = useMemo(() => {
-        const start = (page - 1) * pageSize;
-        return posts.slice(start, start + pageSize);
-    }, [posts, page, pageSize]);
-
     if (profileLoading) {
         return (
             <div className="min-h-screen flex flex-col w-11/12 sm:w-10/12 items-start">
                 <div className="bg-white rounded-md flex-1 p-8 w-full">
                     <p className="text-gray-500">Đang tải...</p>
+                </div>
+            </div>
+        );
+    }
+
+    if (profileError) {
+        return (
+            <div className="min-h-screen flex flex-col w-11/12 sm:w-10/12 items-start">
+                <div className="bg-white rounded-md flex-1 p-8 w-full">
+                    <p className="text-red-500">{profileError}</p>
+                    <Link className="text-blue-500 hover:underline" to="/">
+                        Về trang chủ
+                    </Link>
                 </div>
             </div>
         );
@@ -297,8 +315,44 @@ export default function UserProfile() {
                 </div>
 
                 {/* Steam-ish Header */}
-                <div className="rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+                <div className="rounded-xl border border-gray-100 shadow-sm overflow-hidden relative">
+                    {/* Three-dot menu */}
+                    <div
+                        className="absolute top-4 right-4 z-10"
+                        ref={dropdownRef}
+                    >
+                        <button
+                            onClick={() => setShowDropdown(!showDropdown)}
+                            className="p-2 rounded-full bg-white/80 hover:bg-white/90 shadow-md transition-colors"
+                        >
+                            <MoreVertical size={20} className="text-gray-600" />
+                        </button>
+
+                        {showDropdown && (
+                            <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-lg border py-1 z-20">
+                                {isOwnerProfile ? (
+                                    <button
+                                        onClick={handleEditProfile}
+                                        className="flex items-center gap-3 w-full px-4 py-2 text-left hover:bg-gray-50 text-gray-700"
+                                    >
+                                        <Edit size={16} />
+                                        Chỉnh sửa hồ sơ
+                                    </button>
+                                ) : (
+                                    <button
+                                        onClick={handleReport}
+                                        className="flex items-center gap-3 w-full px-4 py-2 text-left hover:bg-gray-50 text-red-600"
+                                    >
+                                        <Flag size={16} />
+                                        Báo cáo người dùng
+                                    </button>
+                                )}
+                            </div>
+                        )}
+                    </div>
+
                     <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-6 sm:p-8">
+                        {/* centered on mobile, normal row on sm+ */}
                         <div className="flex flex-col items-center text-center sm:text-left sm:flex-row sm:items-center gap-5">
                             <div className="shrink-0">
                                 {profile?.avatarImage ? (
@@ -324,30 +378,36 @@ export default function UserProfile() {
                                     ) : null}
                                 </div>
 
+                                {/* Balanced 2-column on md+, 1 column on mobile */}
                                 <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-                                    <div className="flex items-center gap-2 text-white/90">
+                                    <div className="flex justify-center sm:justify-start items-center gap-2 text-white/90">
                                         <Phone size={16} />
                                         <span className="truncate">
                                             {profile?.phoneNumber || "—"}
                                         </span>
                                     </div>
-                                    <div className="flex items-center gap-2 text-white/90">
+
+                                    <div className="flex justify-center sm:justify-start items-center gap-2 text-white/90">
                                         <Mail size={16} />
                                         <span className="truncate">
                                             {profile?.email || "—"}
                                         </span>
                                     </div>
-                                    <div className="flex items-center gap-2 text-white/90">
+
+                                    <div className="flex justify-center sm:justify-start items-center gap-2 text-white/90">
                                         <MapPin size={16} />
                                         <span className="truncate">
                                             {profile?.address || "—"}
                                         </span>
                                     </div>
-                                    <div className="flex items-center gap-2 text-white/90">
+
+                                    <div className="flex justify-center sm:justify-start items-center gap-2 text-white/90">
                                         <Calendar size={16} />
                                         <span>
                                             Tham gia:{" "}
-                                            {formatDateTime(profile?.createdAt)}
+                                            {formatDateLocal(
+                                                profile?.createdAt
+                                            )}
                                         </span>
                                     </div>
                                 </div>
@@ -444,9 +504,13 @@ export default function UserProfile() {
                             <div className="py-8 text-center text-gray-500">
                                 Đang tải...
                             </div>
-                        ) : pagedPosts.length > 0 ? (
+                        ) : postsError ? (
+                            <div className="py-8 text-center text-red-500">
+                                {postsError}
+                            </div>
+                        ) : posts.length > 0 ? (
                             <div className="space-y-3">
-                                {pagedPosts.map((post) => {
+                                {posts.map((post) => {
                                     const canManage = canEditOrDelete(post);
                                     const posterName =
                                         (post.posterFullName &&
@@ -483,7 +547,7 @@ export default function UserProfile() {
                                                                 {posterName}
                                                             </p>
                                                             <p className="text-xs text-gray-500">
-                                                                {formatDateTime(
+                                                                {formatDateLocal(
                                                                     post.createdAt
                                                                 )}
                                                             </p>
@@ -508,7 +572,7 @@ export default function UserProfile() {
                                                                         <button
                                                                             onClick={() =>
                                                                                 saveEdit(
-                                                                                    post.userWallPostId
+                                                                                    post
                                                                                 )
                                                                             }
                                                                             className="text-sm px-3 py-1 rounded-md bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50"
@@ -537,7 +601,7 @@ export default function UserProfile() {
                                                                         <button
                                                                             onClick={() =>
                                                                                 removePost(
-                                                                                    post.userWallPostId
+                                                                                    post
                                                                                 )
                                                                             }
                                                                             className="text-sm px-3 py-1 rounded-md border border-red-200 text-red-600 hover:bg-red-50"
@@ -623,6 +687,14 @@ export default function UserProfile() {
                         </div>
                     )}
                 </div>
+
+                {/* Profile Edit Modal */}
+                <ProfileEditModal
+                    isOpen={showEditModal}
+                    onClose={() => setShowEditModal(false)}
+                    profile={profile}
+                    onProfileUpdate={handleProfileUpdate}
+                />
             </div>
         </div>
     );

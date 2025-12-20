@@ -20,3 +20,10 @@ export const updateUser = async (userData) => {
     const response = await axiosInstance.put(url + `profile`, userData);
     return response;
 };
+
+export const updateUserAvatar = async (imageUrl) => {
+    const response = await axiosInstance.put(
+        url + `avatar?imageUrl=${encodeURIComponent(imageUrl)}`
+    );
+    return response;
+};

@@ -24,6 +24,7 @@ export const router = createBrowserRouter([
             { path: "post-product", element: <PostProduct /> },
             { path: "edit-product/:productId", element: <EditProduct /> },
             { path: "chat", element: <Chat /> },
+            { path: "chat/:routeUserName", element: <Chat /> },
             { path: "profile/:userName", element: <UserProfile /> },
         ],
     },

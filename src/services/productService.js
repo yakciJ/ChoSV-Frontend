@@ -50,6 +50,16 @@ export const getMyProduct = async (page = 1, pageSize = 10, status = null) => {
     return response;
 };
 
+export const getUserProducts = async (userName, page = 1, pageSize = 10) => {
+    const response = await axiosInstance.get(url + `user/${userName}`, {
+        params: {
+            page,
+            pageSize,
+        },
+    });
+    return response;
+};
+
 export const createProduct = async (productData) => {
     const response = await axiosInstance.post(url, productData);
     return response;
