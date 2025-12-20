@@ -10,6 +10,7 @@ import ManageProducts from "../pages/user/ManageProducts.jsx";
 import PostProduct from "../pages/user/PostProduct.jsx";
 import EditProduct from "../pages/user/EditProduct.jsx";
 import Chat from "../pages/user/Chat.jsx";
+import UserProfile from "../pages/user/UserProfile.jsx";
 
 export const router = createBrowserRouter([
     {
@@ -23,6 +24,7 @@ export const router = createBrowserRouter([
             { path: "post-product", element: <PostProduct /> },
             { path: "edit-product/:productId", element: <EditProduct /> },
             { path: "chat", element: <Chat /> },
+            { path: "profile/:userName", element: <UserProfile /> },
         ],
     },
     {

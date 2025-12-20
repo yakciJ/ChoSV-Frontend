@@ -194,7 +194,7 @@ export default function UserLayout() {
                         {isDropdownOpen && (
                             <div className="absolute right-0 mt-4 w-52 bg-white border border-gray-200 rounded-md shadow-lg py-2 z-50">
                                 <Link
-                                    to="/"
+                                    to={`profile/${user.userName}`}
                                     className="flex items-center justify-between px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                                 >
                                     <div className="flex items-center gap-2">
