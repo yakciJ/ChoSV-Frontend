@@ -1,5 +1,7 @@
 import { createBrowserRouter } from "react-router-dom";
 import UserLayout from "../pages/user/UserLayout.jsx";
+import AdminLayout from "../pages/admin/AdminLayout.jsx";
+import ManageUser from "../pages/admin/ManageUser.jsx";
 import Home from "../pages/user/Home.jsx";
 import Login from "../pages/auth/Login.jsx";
 import Register from "../pages/auth/Register.jsx";
@@ -11,6 +13,11 @@ import PostProduct from "../pages/user/PostProduct.jsx";
 import EditProduct from "../pages/user/EditProduct.jsx";
 import Chat from "../pages/user/Chat.jsx";
 import UserProfile from "../pages/user/UserProfile.jsx";
+import ManageProduct from "../pages/admin/ManageProduct.jsx";
+import Category from "../pages/user/Category.jsx";
+import NewestProduct from "../pages/user/NewestProduct.jsx";
+import PopularProduct from "../pages/user/PopularProduct.jsx";
+import SearchResults from "../pages/user/SearchResults.jsx";
 
 export const router = createBrowserRouter([
     {
@@ -18,6 +25,7 @@ export const router = createBrowserRouter([
         element: <UserLayout />,
         children: [
             { index: true, element: <Home /> },
+            { path: "search", element: <SearchResults /> },
             { path: "product/:productId", element: <Product /> },
             { path: "favorites", element: <Favorite /> },
             { path: "product-management", element: <ManageProducts /> },
@@ -26,6 +34,22 @@ export const router = createBrowserRouter([
             { path: "chat", element: <Chat /> },
             { path: "chat/:routeUserName", element: <Chat /> },
             { path: "profile/:userName", element: <UserProfile /> },
+            { path: "categories/:categoryId", element: <Category /> },
+            { path: "newest", element: <NewestProduct /> },
+            { path: "popular", element: <PopularProduct /> },
+        ],
+    },
+    {
+        path: "/admin",
+        element: <AdminLayout />,
+        children: [
+            { index: true, element: <div>Admin Dashboard</div> },
+            { path: "users", element: <ManageUser /> },
+            { path: "products", element: <ManageProduct /> },
+            { path: "categories", element: <div>Category Management</div> },
+            { path: "reports", element: <div>Reports</div> },
+            { path: "orders", element: <div>Order Management</div> },
+            { path: "settings", element: <div>Settings</div> },
         ],
     },
     {

@@ -29,6 +29,8 @@ export default function UserLayout() {
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const dropdownRef = useRef(null);
 
+    const navigate = useNavigate();
+
     useEffect(() => {
         window.__store = { dispatch };
         return () => {
@@ -39,8 +41,6 @@ export default function UserLayout() {
     useEffect(() => {
         dispatch(initializeAuth());
     }, [dispatch]);
-
-    const navigate = useNavigate();
 
     const handleLogin = () => {
         navigate("/login");
@@ -88,6 +88,19 @@ export default function UserLayout() {
         };
     }, []);
 
+    const handleSearch = (e) => {
+        e.preventDefault();
+        if (query.trim()) {
+            navigate(`/search?search=${encodeURIComponent(query.trim())}`);
+        }
+    };
+
+    const handleSearchKeyPress = (e) => {
+        if (e.key === "Enter") {
+            handleSearch(e);
+        }
+    };
+
     return (
         <div className="w-full bg-blue-100 flex flex-col text-blue-500">
             <header className="sticky mb-8 top-0 left-0 right-0 bg-white flex-row flex p-3 items-center justify-between z-50">
@@ -111,11 +124,15 @@ export default function UserLayout() {
                         Chợ Sinh Viên
                     </span>
                 </Link>
-                <div className="relative w-full max-w-2xl font-sans ml-4 flex-1">
+                <form
+                    onSubmit={handleSearch}
+                    className="relative w-full max-w-2xl font-sans ml-4 flex-1"
+                >
                     <input
                         type="text"
                         value={query}
                         onChange={(e) => setQuery(e.target.value)}
+                        onKeyPress={handleSearchKeyPress}
                         placeholder="Tìm kiếm sản phẩm..."
                         className="w-full pl-10 pr-4 py-2 text-base bg-gray-100 rounded-full border text-black  border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 "
                     />
@@ -123,14 +140,16 @@ export default function UserLayout() {
                     {query && (
                         <CircleX
                             onClick={() => setQuery("")}
-                            className="absolute right-3  top-1/2 -translate-y-1/2"
+                            className="absolute right-3  top-1/2 -translate-y-1/2 cursor-pointer"
                         />
                     )}
-                    <Search
+                    <button
+                        type="submit"
                         className="text-white absolute right-2 top-1/2 -translate-y-1/2 bg-blue-500 hover:bg-blue-600  p-2 rounded-full transition"
-                        size={30}
-                    />
-                </div>
+                    >
+                        <Search size={14} />
+                    </button>
+                </form>
                 <div className="flex items-center gap-4 ml-2 md:ml-0">
                     <div className="hidden md:flex flex-col md:flex-row md:items-center md:gap-4 lg:gap-6">
                         <Link to="/favorites">

@@ -7,4 +7,16 @@ export const getAllCategories = async () => {
     return response;
 };
 
-
+export const getProductsByCategoryId = async (
+    categoryId,
+    page = 1,
+    pageSize = 24
+) => {
+    const response = await axiosInstance.get(url + `${categoryId}/products`, {
+        params: {
+            page,
+            pageSize,
+        },
+    });
+    return response;
+};

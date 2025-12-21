@@ -14,9 +14,7 @@ export default function Home() {
     const [popularProducts, setPopularProducts] = useState([]);
     const [recommendedProducts, setRecommendedProducts] = useState([]);
     const [showRecommended, setShowRecommended] = useState(false);
-    const {
-        data: categories,
-    } = useSelector((state) => state.categories);
+    const { data: categories } = useSelector((state) => state.categories);
 
     const dispatch = useDispatch();
 
@@ -97,7 +95,7 @@ export default function Home() {
                             Sản phẩm nổi bật
                         </h2>
                         <Link
-                            // to trang cac san pham duoc goi y
+                            to="/popular"
                             className="text-blue-500 hover:underline text-sm font-medium"
                         >
                             Xem thêm →
@@ -115,7 +113,7 @@ export default function Home() {
                             Sản phẩm mới
                         </h2>
                         <Link
-                            // to trang cac san pham duoc goi y
+                            to="/newest"
                             className="text-blue-500 hover:underline text-sm font-medium"
                         >
                             Xem thêm →

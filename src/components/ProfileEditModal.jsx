@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { X, Upload, Camera } from "lucide-react";
 import { updateUser, updateUserAvatar } from "../services/userService";
+import { uploadImage } from "../services/imageService";
 
 const ProfileEditModal = ({ isOpen, onClose, profile, onProfileUpdate }) => {
     const [formData, setFormData] = useState({
@@ -9,7 +10,6 @@ const ProfileEditModal = ({ isOpen, onClose, profile, onProfileUpdate }) => {
         address: profile?.address || "",
         phoneNumber: profile?.phoneNumber || "",
     });
-    const [avatarUrl, setAvatarUrl] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
 
@@ -29,37 +29,30 @@ const ProfileEditModal = ({ isOpen, onClose, profile, onProfileUpdate }) => {
 
         setIsUploadingAvatar(true);
         try {
-            // TODO: Implement image upload service when available
-            // For now, create a placeholder URL
-            const placeholderUrl = `https://via.placeholder.com/150?text=${encodeURIComponent(
-                file.name
-            )}`;
-            setAvatarUrl(placeholderUrl);
-            alert(
-                "Tính năng upload ảnh sẽ được triển khai sau. URL placeholder đã được tạo."
-            );
-        } catch (error) {
-            console.error("Error uploading image:", error);
-            alert("Có lỗi xảy ra khi upload ảnh.");
-        } finally {
-            setIsUploadingAvatar(false);
-        }
-    };
+            // Upload image to server
+            const uploadResponse = await uploadImage(file);
+            const imageUrl =
+                uploadResponse.url || uploadResponse.imageUrl || uploadResponse;
 
-    const handleAvatarUpdate = async () => {
-        if (!avatarUrl.trim()) return;
+            if (!imageUrl) {
+                throw new Error("Không nhận được URL ảnh từ server");
+            }
 
-        setIsUploadingAvatar(true);
-        try {
-            await updateUserAvatar(avatarUrl);
+            // Automatically update user avatar
+            await updateUserAvatar(imageUrl);
+
             alert("Cập nhật avatar thành công!");
-            setAvatarUrl("");
             onProfileUpdate?.();
         } catch (error) {
-            console.error("Error updating avatar:", error);
-            alert("Có lỗi xảy ra khi cập nhật avatar.");
+            console.error("Error uploading image:", error);
+            alert(
+                "Có lỗi xảy ra khi upload ảnh: " +
+                    (error.message || "Lỗi không xác định")
+            );
         } finally {
             setIsUploadingAvatar(false);
+            // Reset file input
+            e.target.value = "";
         }
     };
 
@@ -130,42 +123,22 @@ const ProfileEditModal = ({ isOpen, onClose, profile, onProfileUpdate }) => {
                             />
                             <label
                                 htmlFor="avatar-upload"
-                                className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 cursor-pointer disabled:opacity-50"
+                                className={`inline-flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 cursor-pointer transition-colors ${
+                                    isUploadingAvatar
+                                        ? "opacity-50 cursor-not-allowed"
+                                        : "hover:bg-gray-50"
+                                }`}
                             >
                                 <Upload size={16} />
-                                {isUploadingAvatar ? "Đang tải..." : "Chọn ảnh"}
+                                {isUploadingAvatar
+                                    ? "Đang upload..."
+                                    : "Chọn ảnh mới"}
                             </label>
                             <p className="text-sm text-gray-500 mt-2">
-                                Chức năng upload ảnh đang được phát triển
-                            </p>
-                        </div>
-                    </div>
-
-                    {/* Avatar URL Input */}
-                    <div className="mt-4">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            URL Avatar (tạm thời)
-                        </label>
-                        <div className="flex gap-2">
-                            <input
-                                type="url"
-                                value={avatarUrl}
-                                onChange={(e) => setAvatarUrl(e.target.value)}
-                                placeholder="https://example.com/avatar.jpg"
-                                className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                disabled={isUploadingAvatar}
-                            />
-                            <button
-                                onClick={handleAvatarUpdate}
-                                disabled={
-                                    isUploadingAvatar || !avatarUrl.trim()
-                                }
-                                className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
                                 {isUploadingAvatar
-                                    ? "Đang cập nhật..."
-                                    : "Cập nhật"}
-                            </button>
+                                    ? "Đang tải ảnh lên và cập nhật avatar..."
+                                    : "Chọn ảnh để tự động cập nhật avatar"}
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -184,6 +157,7 @@ const ProfileEditModal = ({ isOpen, onClose, profile, onProfileUpdate }) => {
                                 onChange={handleInputChange}
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 placeholder="Nhập họ và tên"
+                                disabled={isSubmitting || isUploadingAvatar}
                             />
                         </div>
 
@@ -198,6 +172,7 @@ const ProfileEditModal = ({ isOpen, onClose, profile, onProfileUpdate }) => {
                                 onChange={handleInputChange}
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 placeholder="Nhập số điện thoại"
+                                disabled={isSubmitting || isUploadingAvatar}
                             />
                         </div>
 
@@ -212,6 +187,7 @@ const ProfileEditModal = ({ isOpen, onClose, profile, onProfileUpdate }) => {
                                 onChange={handleInputChange}
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 placeholder="Nhập địa chỉ"
+                                disabled={isSubmitting || isUploadingAvatar}
                             />
                         </div>
 
@@ -226,6 +202,7 @@ const ProfileEditModal = ({ isOpen, onClose, profile, onProfileUpdate }) => {
                                 rows={4}
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
                                 placeholder="Viết vài dòng giới thiệu về bản thân..."
+                                disabled={isSubmitting || isUploadingAvatar}
                             />
                         </div>
                     </div>
@@ -236,7 +213,7 @@ const ProfileEditModal = ({ isOpen, onClose, profile, onProfileUpdate }) => {
                             type="button"
                             onClick={handleClose}
                             disabled={isSubmitting || isUploadingAvatar}
-                            className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50"
+                            className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             Hủy
                         </button>
