@@ -1,10 +1,20 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
-import { getPopularProducts } from "../../services/productService";
+import { Link, useParams, useSearchParams } from "react-router-dom";
+import {
+    getNewestProducts,
+    getPopularProducts,
+    getSimilarProducts,
+    getUserProducts,
+} from "../../services/productService";
 import ProductGrid from "../../components/ProductGrid";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
-export default function PopularProduct() {
+// Type can be: "newest", "popular", "similar", "user"
+export default function ProductListing({ type }) {
+    const { productId, userName } = useParams();
+    const [searchParams] = useSearchParams();
+    const productName = searchParams.get("name") || "";
+
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [currentPage, setCurrentPage] = useState(1);
@@ -14,27 +24,96 @@ export default function PopularProduct() {
     const [hasPrevious, setHasPrevious] = useState(false);
     const pageSize = 24;
 
+    // Get page config based on type
+    const getPageConfig = () => {
+        switch (type) {
+            case "newest":
+                return {
+                    title: "Sản phẩm mới nhất",
+                    breadcrumb: "Sản phẩm mới nhất",
+                };
+            case "popular":
+                return {
+                    title: "Sản phẩm nổi bật",
+                    breadcrumb: "Sản phẩm nổi bật",
+                };
+            case "similar":
+                return {
+                    title: `Các sản phẩm tương tự với "${productName}"`,
+                    breadcrumb: "Sản phẩm tương tự",
+                };
+            case "user":
+                return {
+                    title: `Các sản phẩm của "${userName}"`,
+                    breadcrumb: `Sản phẩm của ${userName}`,
+                };
+            default:
+                return {
+                    title: "Sản phẩm",
+                    breadcrumb: "Sản phẩm",
+                };
+        }
+    };
+
+    const config = getPageConfig();
+
+    // Reset page when type or params change
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [type, productId, userName]);
+
     // Fetch products when page changes
     useEffect(() => {
         fetchProducts();
-    }, [currentPage]);
+    }, [currentPage, type, productId, userName]);
 
     const fetchProducts = async () => {
         setLoading(true);
         try {
-            const response = await getPopularProducts(
-                currentPage,
-                pageSize,
-                30
-            ); // 30 days back
+            let response;
 
-            setProducts(response.items || []);
-            setTotalCount(response.totalCount || 0);
-            setTotalPages(response.totalPages || 1);
-            setHasNext(response.hasNext || false);
-            setHasPrevious(response.hasPrevious || false);
+            switch (type) {
+                case "newest":
+                    response = await getNewestProducts(currentPage, pageSize);
+                    break;
+                case "popular":
+                    response = await getPopularProducts(
+                        currentPage,
+                        pageSize,
+                        30
+                    );
+                    break;
+                case "similar":
+                    if (productId) {
+                        response = await getSimilarProducts(
+                            productId,
+                            currentPage,
+                            pageSize
+                        );
+                    }
+                    break;
+                case "user":
+                    if (userName) {
+                        response = await getUserProducts(
+                            userName,
+                            currentPage,
+                            pageSize
+                        );
+                    }
+                    break;
+                default:
+                    response = { items: [], totalCount: 0, totalPages: 1 };
+            }
+
+            if (response) {
+                setProducts(response.items || []);
+                setTotalCount(response.totalCount || 0);
+                setTotalPages(response.totalPages || 1);
+                setHasNext(response.hasNext || false);
+                setHasPrevious(response.hasPrevious || false);
+            }
         } catch (error) {
-            console.error("Error fetching popular products:", error);
+            console.error(`Error fetching ${type} products:`, error);
             setProducts([]);
             setTotalCount(0);
             setTotalPages(1);
@@ -62,7 +141,7 @@ export default function PopularProduct() {
                     </Link>
                     <span>/</span>
                     <span className="text-blue-500 font-medium">
-                        Sản phẩm nổi bật
+                        {config.breadcrumb}
                     </span>
                 </nav>
             </div>
@@ -72,7 +151,7 @@ export default function PopularProduct() {
                 <ProductGrid
                     products={products}
                     loading={loading}
-                    title={`Sản phẩm nổi bật (${totalCount} sản phẩm)`}
+                    title={`${config.title} (${totalCount} sản phẩm)`}
                 />
             </div>
 

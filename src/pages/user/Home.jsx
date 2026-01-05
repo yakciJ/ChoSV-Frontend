@@ -70,7 +70,7 @@ export default function Home() {
                 Chợ sinh viên có đó!
             </h1>
             {/* category section */}
-            <div className="bg-white grid justify-center gap-x-16 sm:gap-6 sm:py-4 py-6 px-6 rounded-xl lg:grid-cols-6 sm:grid-cols-3 grid-cols-2">
+            <div className="bg-white sm:grid justify-center gap-x-16 sm:gap-6 sm:py-4 py-6 px-6 rounded-xl lg:grid-cols-6 sm:grid-cols-3 hidden">
                 {rootCategories.map((category) => (
                     <Link
                         to={`/categories/${category.categoryId}`}

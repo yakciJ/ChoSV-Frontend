@@ -1,14 +1,63 @@
-import { Trash2 } from "lucide-react";
+import { Trash2, RefreshCw } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Edit3 } from "lucide-react";
-import { User } from "lucide-react";
 import { formatVND } from "../helpers/formatPrice";
 import { formatDateLocal } from "../helpers/formatDate";
+import {
+    deleteUserProduct,
+    updateProductStatus,
+} from "../services/productService";
+import { useState } from "react";
 
-export default function ManageProductCard(product) {
-    const removeProduct = () => {
-        // Call API to remove product
+export default function ManageProductCard({
+    product,
+    onDelete,
+    onStatusChange,
+}) {
+    const [isDeleting, setIsDeleting] = useState(false);
+    const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+    const [currentStatus, setCurrentStatus] = useState(product.status);
+
+    const removeProduct = async () => {
+        if (!window.confirm("Bạn có chắc chắn muốn xóa sản phẩm này?")) {
+            return;
+        }
+
+        setIsDeleting(true);
+        try {
+            await deleteUserProduct(product.productId);
+            if (onDelete) {
+                onDelete(product.productId);
+            }
+        } catch (error) {
+            console.error("Error deleting product:", error);
+            alert("Xóa sản phẩm thất bại. Vui lòng thử lại.");
+        } finally {
+            setIsDeleting(false);
+        }
     };
+
+    const toggleStatus = async () => {
+        const newStatus = currentStatus === "Sold" ? "Approved" : "Sold";
+
+        setIsUpdatingStatus(true);
+        try {
+            await updateProductStatus(product.productId, newStatus);
+            setCurrentStatus(newStatus);
+            if (onStatusChange) {
+                onStatusChange(product.productId, newStatus);
+            }
+        } catch (error) {
+            console.error("Error updating product status:", error);
+            alert("Cập nhật trạng thái thất bại. Vui lòng thử lại.");
+        } finally {
+            setIsUpdatingStatus(false);
+        }
+    };
+
+    // Only show status toggle for Approved or Sold products
+    const canToggleStatus =
+        currentStatus === "Approved" || currentStatus === "Sold";
 
     return (
         <div className="flex border gap-4 border-gray-300 rounded-md p-2 w-full my-4">
@@ -43,12 +92,38 @@ export default function ManageProductCard(product) {
                     <Edit3 />
                     <p className="hidden lg:block mx-2">Sửa tin</p>
                 </Link>
+                {canToggleStatus && (
+                    <button
+                        className={`flex text-white px-4 py-2 rounded-md transition-colors w-full disabled:opacity-50 disabled:cursor-not-allowed items-center justify-center ${
+                            currentStatus === "Approved"
+                                ? "bg-orange-500 hover:bg-orange-600"
+                                : "bg-green-600 hover:bg-green-700"
+                        }`}
+                        onClick={toggleStatus}
+                        disabled={isUpdatingStatus}
+                    >
+                        <RefreshCw
+                            className={isUpdatingStatus ? "animate-spin" : ""}
+                            size={18}
+                        />
+                        <p className="hidden lg:block mx-2">
+                            {isUpdatingStatus
+                                ? "Đang cập nhật..."
+                                : currentStatus === "Approved"
+                                ? "Đã bán"
+                                : "Mở bán lại"}
+                        </p>
+                    </button>
+                )}
                 <button
-                    className="bg-blue-500 flex text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors w-full"
-                    onClick={removeProduct()}
+                    className="bg-red-500 flex text-white px-4 py-2 rounded-md hover:bg-red-600 transition-colors w-full disabled:opacity-50 disabled:cursor-not-allowed items-center justify-center"
+                    onClick={removeProduct}
+                    disabled={isDeleting}
                 >
-                    <Trash2 />
-                    <p className="hidden lg:block mx-2">Xóa sản phẩm</p>
+                    <Trash2 size={18} />
+                    <p className="hidden lg:block mx-2">
+                        {isDeleting ? "Đang xóa..." : "Xóa sản phẩm"}
+                    </p>
                 </button>
             </div>
         </div>

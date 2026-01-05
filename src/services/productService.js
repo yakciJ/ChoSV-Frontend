@@ -39,6 +39,20 @@ export const getProduct = async (productId) => {
     return response;
 };
 
+export const getSimilarProducts = async (
+    productId,
+    page = 1,
+    pageSize = 12
+) => {
+    const response = await axiosInstance.get(url + `${productId}/similar`, {
+        params: {
+            page,
+            pageSize,
+        },
+    });
+    return response;
+};
+
 export const getMyProduct = async (page = 1, pageSize = 10, status = null) => {
     const response = await axiosInstance.get(url + `me`, {
         params: {
@@ -68,8 +82,22 @@ export const updateProduct = async (productId, productData) => {
     const response = await axiosInstance.put(url + `${productId}`, productData);
     return response;
 };
-export const deleteProduct = async (productId) => {
-    const response = await axiosInstance.delete(url + `${productId}`);
+
+export const deleteUserProduct = async (productId) => {
+    const response = await axiosInstance.delete(url + `user/${productId}`);
+    return response;
+};
+
+export const updateProductStatus = async (productId, status) => {
+    const response = await axiosInstance.put(
+        url + `${productId}/status`,
+        JSON.stringify(status),
+        {
+            headers: {
+                "Content-Type": "application/json-patch+json",
+            },
+        }
+    );
     return response;
 };
 

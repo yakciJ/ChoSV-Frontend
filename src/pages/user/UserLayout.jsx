@@ -7,18 +7,19 @@ import {
     MessageCircleMore,
     Bell,
     ChevronDown,
-    TextAlignJustify,
+    Menu,
     User,
     ChevronRight,
     History,
     LogOut,
-    FilePlus,
     Plus,
     Store,
+    X,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { initializeAuth, logoutUser } from "../../store/userSlice";
+import { fetchAllCategories } from "../../store/categorySlice";
 import { useNavigate } from "react-router-dom";
 import { useRef } from "react";
 
@@ -26,8 +27,12 @@ export default function UserLayout() {
     const [query, setQuery] = useState("");
     const dispatch = useDispatch();
     const { info: user, isAuthenticated } = useSelector((state) => state.user);
+    const { data: categories } = useSelector((state) => state.categories);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [expandedCategories, setExpandedCategories] = useState({});
     const dropdownRef = useRef(null);
+    const sidebarRef = useRef(null);
 
     const navigate = useNavigate();
 
@@ -40,7 +45,10 @@ export default function UserLayout() {
 
     useEffect(() => {
         dispatch(initializeAuth());
-    }, [dispatch]);
+        if (categories.length === 0) {
+            dispatch(fetchAllCategories());
+        }
+    }, [dispatch, categories.length]);
 
     const handleLogin = () => {
         navigate("/login");
@@ -48,6 +56,21 @@ export default function UserLayout() {
 
     const toggleDropdown = () => {
         setIsDropdownOpen(!isDropdownOpen);
+    };
+
+    const toggleSidebar = () => {
+        setIsSidebarOpen(!isSidebarOpen);
+    };
+
+    const closeSidebar = () => {
+        setIsSidebarOpen(false);
+    };
+
+    const toggleCategoryExpand = (categoryId) => {
+        setExpandedCategories((prev) => ({
+            ...prev,
+            [categoryId]: !prev[categoryId],
+        }));
     };
 
     const handleLogout = async () => {
@@ -80,6 +103,13 @@ export default function UserLayout() {
             ) {
                 setIsDropdownOpen(false);
             }
+            if (
+                sidebarRef.current &&
+                !sidebarRef.current.contains(event.target) &&
+                !event.target.closest("[data-sidebar-toggle]")
+            ) {
+                setIsSidebarOpen(false);
+            }
         };
 
         document.addEventListener("mousedown", handleClickOutside);
@@ -101,13 +131,115 @@ export default function UserLayout() {
         }
     };
 
+    // Render category tree recursively
+    const renderCategoryTree = (categoryList, level = 0) => {
+        return categoryList.map((category) => {
+            const hasChildren = category.childs && category.childs.length > 0;
+            const isExpanded = expandedCategories[category.categoryId];
+
+            return (
+                <div key={category.categoryId}>
+                    <div
+                        className={`flex items-center justify-between py-2 px-3 hover:bg-blue-50 cursor-pointer ${
+                            level > 0 ? "pl-" + (level * 4 + 3) : ""
+                        }`}
+                        style={{
+                            paddingLeft:
+                                level > 0 ? `${level * 16 + 12}px` : undefined,
+                        }}
+                    >
+                        <Link
+                            to={`/categories/${category.categoryId}`}
+                            className="flex items-center gap-2 flex-1 text-gray-700 hover:text-blue-600"
+                            onClick={closeSidebar}
+                        >
+                            {category.imageUrl && (
+                                <img
+                                    src={category.imageUrl}
+                                    alt={category.name}
+                                    className="w-6 h-6 object-cover rounded"
+                                />
+                            )}
+                            <span className="text-sm">{category.name}</span>
+                        </Link>
+                        {hasChildren && (
+                            <button
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    toggleCategoryExpand(category.categoryId);
+                                }}
+                                className="p-1 hover:bg-gray-200 rounded"
+                            >
+                                <ChevronRight
+                                    size={16}
+                                    className={`text-gray-500 transition-transform ${
+                                        isExpanded ? "rotate-90" : ""
+                                    }`}
+                                />
+                            </button>
+                        )}
+                    </div>
+                    {hasChildren && isExpanded && (
+                        <div className="border-l border-gray-200 ml-4">
+                            {renderCategoryTree(category.childs, level + 1)}
+                        </div>
+                    )}
+                </div>
+            );
+        });
+    };
+
     return (
         <div className="w-full bg-blue-100 flex flex-col text-blue-500">
-            <header className="sticky mb-8 top-0 left-0 right-0 bg-white flex-row flex p-3 items-center justify-between z-50">
-                <TextAlignJustify
-                    className="ml-[1vw] flex-shrink-0 text-black"
-                    size={22}
+            {/* Sidebar Overlay */}
+            {isSidebarOpen && (
+                <div
+                    className="fixed inset-0 bg-black bg-opacity-50 z-50"
+                    onClick={closeSidebar}
                 />
+            )}
+
+            {/* Sidebar */}
+            <div
+                ref={sidebarRef}
+                className={`fixed top-0 left-0 h-full w-72 bg-white shadow-lg z-50 transform transition-transform duration-300 ease-in-out ${
+                    isSidebarOpen ? "translate-x-0" : "-translate-x-full"
+                }`}
+            >
+                {/* Sidebar Header */}
+                <div className="flex items-center justify-between p-4 border-b border-gray-200">
+                    <h2 className="text-lg font-semibold text-gray-800">
+                        Danh mục
+                    </h2>
+                    <button
+                        onClick={closeSidebar}
+                        className="p-1 hover:bg-gray-100 rounded-full"
+                    >
+                        <X size={20} className="text-gray-600" />
+                    </button>
+                </div>
+
+                {/* Category List */}
+                <div className="overflow-y-auto h-[calc(100%-60px)]">
+                    {categories.length > 0 ? (
+                        renderCategoryTree(categories)
+                    ) : (
+                        <div className="p-4 text-center text-gray-500">
+                            Đang tải danh mục...
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            <header className="sticky mb-8 top-0 left-0 right-0 bg-white flex-row flex p-3 items-center justify-between z-40">
+                <button
+                    data-sidebar-toggle
+                    onClick={toggleSidebar}
+                    className="ml-[1vw] flex-shrink-0 text-black hover:bg-gray-100 p-1 rounded"
+                >
+                    <Menu size={22} />
+                </button>
                 <Link
                     to="/"
                     className="flex items-center space-x-3"

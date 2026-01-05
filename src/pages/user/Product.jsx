@@ -23,6 +23,7 @@ import UserWallPost from "../../components/UserWallPost";
 import {
     getNewestProducts,
     getPopularProducts,
+    getSimilarProducts,
 } from "../../services/productService";
 
 export default function Product() {
@@ -39,7 +40,7 @@ export default function Product() {
     const [newestProducts, setNewestProducts] = useState([]);
     const [popularProducts, setPopularProducts] = useState([]);
     const [recommendedProducts, setRecommendedProducts] = useState([]);
-    const [relevantProducts, setRelevantProducts] = useState([]);
+    const [similarProducts, setSimilarProducts] = useState([]);
 
     // mẫu data
     //     {
@@ -99,6 +100,16 @@ export default function Product() {
             setPopularProducts(response.items || []);
         } catch (err) {
             console.error("Error fetching popular products:", err);
+        }
+    };
+
+    const fetchSimilarProducts = async (productId) => {
+        try {
+            const response = await getSimilarProducts(productId, 1, 12);
+            console.log("Similar products fetched", response);
+            setSimilarProducts(response.items || []);
+        } catch (err) {
+            console.error("Error fetching similar products:", err);
         }
     };
 
@@ -195,6 +206,8 @@ export default function Product() {
         getProductDetails();
         fetchNewestProducts();
         fetchPopularProducts();
+        fetchSimilarProducts(productId);
+        console.log("Similar products fetched", similarProducts);
         window.scrollTo({
             top: 0,
             left: 0,
@@ -454,8 +467,10 @@ export default function Product() {
 
             <ProductCarousel
                 title="Sản phẩm tương tự"
-                products={relevantProducts}
-                viewAllLink={`/category/${product?.childCategoryId}`}
+                products={similarProducts}
+                viewAllLink={`/similar/${productId}?name=${encodeURIComponent(
+                    product?.productName || ""
+                )}`}
             />
             {recommendedProducts && (
                 <ProductCarousel
@@ -467,12 +482,12 @@ export default function Product() {
             <ProductCarousel
                 title="Sản phẩm mới"
                 products={newestProducts}
-                viewAllLink={`/category/${product?.childCategoryId}`}
+                viewAllLink="/newest"
             />
             <ProductCarousel
                 title="Sản phẩm nổi bật"
                 products={popularProducts}
-                viewAllLink={`/category/${product?.childCategoryId}`}
+                viewAllLink="/popular"
             />
         </div>
     );

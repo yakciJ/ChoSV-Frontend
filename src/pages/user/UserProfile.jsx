@@ -430,7 +430,11 @@ export default function UserProfile() {
 
                 {/* Products */}
                 <div className="mt-8">
-                    <ProductCarousel title="Sản phẩm" products={products} />
+                    <ProductCarousel
+                        title="Sản phẩm"
+                        products={products}
+                        viewAllLink={`/user-products/${userName}`}
+                    />
                     {productsLoading ? (
                         <p className="text-gray-500 mt-2">Đang tải...</p>
                     ) : null}

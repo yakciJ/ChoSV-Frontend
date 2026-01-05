@@ -15,8 +15,7 @@ import Chat from "../pages/user/Chat.jsx";
 import UserProfile from "../pages/user/UserProfile.jsx";
 import ManageProduct from "../pages/admin/ManageProduct.jsx";
 import Category from "../pages/user/Category.jsx";
-import NewestProduct from "../pages/user/NewestProduct.jsx";
-import PopularProduct from "../pages/user/PopularProduct.jsx";
+import ProductListing from "../pages/user/ProductListing.jsx";
 import SearchResults from "../pages/user/SearchResults.jsx";
 
 export const router = createBrowserRouter([
@@ -35,8 +34,16 @@ export const router = createBrowserRouter([
             { path: "chat/:routeUserName", element: <Chat /> },
             { path: "profile/:userName", element: <UserProfile /> },
             { path: "categories/:categoryId", element: <Category /> },
-            { path: "newest", element: <NewestProduct /> },
-            { path: "popular", element: <PopularProduct /> },
+            { path: "newest", element: <ProductListing type="newest" /> },
+            { path: "popular", element: <ProductListing type="popular" /> },
+            {
+                path: "similar/:productId",
+                element: <ProductListing type="similar" />,
+            },
+            {
+                path: "user-products/:userName",
+                element: <ProductListing type="user" />,
+            },
         ],
     },
     {

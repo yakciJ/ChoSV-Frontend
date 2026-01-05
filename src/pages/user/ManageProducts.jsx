@@ -62,6 +62,21 @@ export default function ManageProducts() {
         }
     };
 
+    // Handle product deletion
+    const handleDeleteProduct = (productId) => {
+        setProducts((prev) => prev.filter((p) => p.productId !== productId));
+        setTotalCount((prev) => prev - 1);
+    };
+
+    // Handle product status change
+    const handleStatusChange = (productId, newStatus) => {
+        setProducts((prev) =>
+            prev.map((p) =>
+                p.productId === productId ? { ...p, status: newStatus } : p
+            )
+        );
+    };
+
     return (
         <div className="min-h-screen flex flex-col w-11/12 sm:w-10/12 items-start">
             <div className="bg-white rounded-md flex-1 p-8 w-full">
@@ -113,7 +128,11 @@ export default function ManageProducts() {
                                     key={product.productId}
                                     className="relative"
                                 >
-                                    <ManageProductCard {...product} />
+                                    <ManageProductCard
+                                        product={product}
+                                        onDelete={handleDeleteProduct}
+                                        onStatusChange={handleStatusChange}
+                                    />
                                     {/* Status badge */}
                                     <div className="absolute top-3 left-3 z-10">
                                         <span
