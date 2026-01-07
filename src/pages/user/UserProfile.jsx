@@ -11,6 +11,7 @@ import {
     Edit,
 } from "lucide-react";
 import { formatDateLocal } from "../../helpers/formatDate";
+import { useDialog } from "../../hooks/useDialog";
 
 import ProductCarousel from "../../components/ProductCarousel";
 import ProfileEditModal from "../../components/ProfileEditModal";
@@ -53,6 +54,8 @@ export default function UserProfile() {
         (state) => state.user
     );
     const currentUserId = currentUser?.userId;
+    
+    const { confirm, showError } = useDialog();
 
     const [profile, setProfile] = useState(null);
     const [profileLoading, setProfileLoading] = useState(true);
@@ -169,7 +172,7 @@ export default function UserProfile() {
 
     const handleReport = () => {
         setShowDropdown(false);
-        alert("Tính năng báo cáo sẽ được triển khai sau.");
+        showError("Tính năng báo cáo sẽ được triển khai sau.");
     };
 
     const handleEditProfile = () => {
@@ -216,7 +219,7 @@ export default function UserProfile() {
             });
         } catch (e) {
             console.error(e);
-            alert("Không thể đăng bình luận.");
+            showError("Không thể đăng bình luận.");
         } finally {
             setSubmitting(false);
         }
@@ -248,17 +251,20 @@ export default function UserProfile() {
             await fetchWallPosts();
         } catch (e) {
             console.error(e);
-            alert("Không thể cập nhật bình luận.");
+            showError("Không thể cập nhật bình luận.");
         } finally {
             setSavingEdit(false);
         }
     };
 
     const removePost = async (post) => {
-        const ok = window.confirm("Xóa bình luận này?");
-        if (!ok) return;
-
         try {
+            await confirm("Xóa bình luận này?", {
+                title: "Xóa bình luận",
+                confirmText: "Xóa",
+                type: "warning"
+            });
+
             await deleteUserWallPost(post.userWallPostId);
 
             // if deleting last item, keep page valid
@@ -269,9 +275,11 @@ export default function UserProfile() {
             } else {
                 await fetchWallPosts();
             }
-        } catch (e) {
-            console.error(e);
-            alert("Không thể xóa bình luận.");
+        } catch (error) {
+            if (error !== false) { // false means user cancelled, don't show error
+                console.error(error);
+                showError("Không thể xóa bình luận.");
+            }
         }
     };
 

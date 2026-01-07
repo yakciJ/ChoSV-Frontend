@@ -9,6 +9,7 @@ import {
 } from "../services/productService";
 import { uploadImage } from "../services/imageService";
 import { formatVND } from "../helpers/formatPrice";
+import { useDialog } from "../hooks/useDialog";
 
 export default function ProductForm({ mode, productId }) {
     const navigate = useNavigate();
@@ -16,6 +17,8 @@ export default function ProductForm({ mode, productId }) {
     const [categories, setCategories] = useState([]);
     const [selectedParentCategory, setSelectedParentCategory] = useState(null);
     const [uploadingImage, setUploadingImage] = useState(false);
+    
+    const { showSuccess, showError } = useDialog();
 
     const [formData, setFormData] = useState({
         productName: "",
@@ -91,7 +94,7 @@ export default function ProductForm({ mode, productId }) {
             }));
         } catch (error) {
             console.error("Error uploading image:", error);
-            alert("Lỗi khi tải ảnh lên");
+            showError("Lỗi khi tải ảnh lên");
         } finally {
             setUploadingImage(false);
         }
@@ -165,7 +168,7 @@ export default function ProductForm({ mode, productId }) {
             !formData.parentCategoryId ||
             !formData.childCategoryId
         ) {
-            alert("Vui lòng điền đầy đủ thông tin bắt buộc");
+            showError("Vui lòng điền đầy đủ thông tin bắt buộc");
             return;
         }
 
@@ -182,15 +185,15 @@ export default function ProductForm({ mode, productId }) {
         try {
             if (mode === "create") {
                 await createProduct(submitData);
-                alert("Đăng tin thành công!");
+                showSuccess("Đăng tin thành công!");
             } else {
                 await updateProduct(productId, submitData);
-                alert("Cập nhật thành công!");
+                showSuccess("Cập nhật thành công!");
             }
             navigate("/product-management");
         } catch (error) {
             console.error("Error submitting product:", error);
-            alert(`Lỗi: ${error.message || "Có lỗi xảy ra"}`);
+            showError(`Lỗi: ${error.message || "Có lỗi xảy ra"}`);
         } finally {
             setLoading(false);
         }

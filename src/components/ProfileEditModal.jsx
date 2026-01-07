@@ -2,6 +2,7 @@ import { useState } from "react";
 import { X, Upload, Camera } from "lucide-react";
 import { updateUser, updateUserAvatar } from "../services/userService";
 import { uploadImage } from "../services/imageService";
+import { useDialog } from "../hooks/useDialog";
 
 const ProfileEditModal = ({ isOpen, onClose, profile, onProfileUpdate }) => {
     const [formData, setFormData] = useState({
@@ -12,6 +13,8 @@ const ProfileEditModal = ({ isOpen, onClose, profile, onProfileUpdate }) => {
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+    
+    const { showSuccess, showError } = useDialog();
 
     if (!isOpen) return null;
 
@@ -41,11 +44,11 @@ const ProfileEditModal = ({ isOpen, onClose, profile, onProfileUpdate }) => {
             // Automatically update user avatar
             await updateUserAvatar(imageUrl);
 
-            alert("Cập nhật avatar thành công!");
+            showSuccess("Cập nhật avatar thành công!");
             onProfileUpdate?.();
         } catch (error) {
             console.error("Error uploading image:", error);
-            alert(
+            showError(
                 "Có lỗi xảy ra khi upload ảnh: " +
                     (error.message || "Lỗi không xác định")
             );
@@ -62,12 +65,12 @@ const ProfileEditModal = ({ isOpen, onClose, profile, onProfileUpdate }) => {
 
         try {
             await updateUser(formData);
-            alert("Cập nhật thông tin thành công!");
+            showSuccess("Cập nhật thông tin thành công!");
             onProfileUpdate?.();
             onClose();
         } catch (error) {
             console.error("Error updating profile:", error);
-            alert("Có lỗi xảy ra khi cập nhật thông tin.");
+            showError("Có lỗi xảy ra khi cập nhật thông tin.");
         } finally {
             setIsSubmitting(false);
         }

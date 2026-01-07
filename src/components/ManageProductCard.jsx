@@ -8,6 +8,7 @@ import {
     updateProductStatus,
 } from "../services/productService";
 import { useState } from "react";
+import { useDialog } from "../hooks/useDialog";
 
 export default function ManageProductCard({
     product,
@@ -17,21 +18,26 @@ export default function ManageProductCard({
     const [isDeleting, setIsDeleting] = useState(false);
     const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
     const [currentStatus, setCurrentStatus] = useState(product.status);
+    
+    const { confirmDelete, showError } = useDialog();
 
     const removeProduct = async () => {
-        if (!window.confirm("Bạn có chắc chắn muốn xóa sản phẩm này?")) {
-            return;
-        }
-
-        setIsDeleting(true);
         try {
+            await confirmDelete("Bạn có chắc chắn muốn xóa sản phẩm này?", {
+                title: "Xóa sản phẩm",
+                confirmText: "Xóa"
+            });
+
+            setIsDeleting(true);
             await deleteUserProduct(product.productId);
             if (onDelete) {
                 onDelete(product.productId);
             }
         } catch (error) {
-            console.error("Error deleting product:", error);
-            alert("Xóa sản phẩm thất bại. Vui lòng thử lại.");
+            if (error !== false) { // false means user cancelled, don't show error
+                console.error("Error deleting product:", error);
+                showError("Xóa sản phẩm thất bại. Vui lòng thử lại.");
+            }
         } finally {
             setIsDeleting(false);
         }
@@ -49,7 +55,7 @@ export default function ManageProductCard({
             }
         } catch (error) {
             console.error("Error updating product status:", error);
-            alert("Cập nhật trạng thái thất bại. Vui lòng thử lại.");
+            showError("Cập nhật trạng thái thất bại. Vui lòng thử lại.");
         } finally {
             setIsUpdatingStatus(false);
         }

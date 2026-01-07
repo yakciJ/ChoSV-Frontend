@@ -20,6 +20,7 @@ import {
     deleteProductAdmin,
 } from "../../services/productService";
 import { formatVND } from "../../helpers/formatPrice";
+import { useDialog } from "../../hooks/useDialog";
 
 const ManageProduct = () => {
     const [products, setProducts] = useState([]);
@@ -35,6 +36,8 @@ const ManageProduct = () => {
     const [error, setError] = useState(null);
     const [selectedProduct, setSelectedProduct] = useState(null);
     const [showDetailModal, setShowDetailModal] = useState(false);
+    
+    const { confirmDelete, showSuccess, showError } = useDialog();
 
     const statusOptions = [
         { value: "", label: "Tất cả trạng thái" },
@@ -89,7 +92,7 @@ const ManageProduct = () => {
                 setSelectedProduct({ ...selectedProduct, status: newStatus });
             }
 
-            alert(
+            showSuccess(
                 `Đã ${
                     newStatus === "Approved" ? "duyệt" : "từ chối"
                 } sản phẩm thành công!`
@@ -97,37 +100,41 @@ const ManageProduct = () => {
             setShowDetailModal(false);
         } catch (error) {
             console.error("Error updating product status:", error);
-            alert("Không thể cập nhật trạng thái sản phẩm. Vui lòng thử lại.");
+            showError("Không thể cập nhật trạng thái sản phẩm. Vui lòng thử lại.");
         }
     };
 
     const handleDelete = async (productId, productName) => {
-        if (
-            window.confirm(
-                `Bạn có chắc chắn muốn xóa sản phẩm "${productName}"?`
-            )
-        ) {
-            try {
-                await deleteProductAdmin(productId);
-
-                // Remove product from local state
-                setProducts(
-                    products.filter(
-                        (product) => product.productId !== productId
-                    )
-                );
-                setTotalCount((prevCount) => prevCount - 1);
-
-                alert("Đã xóa sản phẩm thành công!");
-
-                // Close modal if the deleted product is currently being viewed
-                if (selectedProduct?.productId === productId) {
-                    setShowDetailModal(false);
-                    setSelectedProduct(null);
+        try {
+            await confirmDelete(
+                `Bạn có chắc chắn muốn xóa sản phẩm "${productName}"?`,
+                {
+                    title: "Xóa sản phẩm",
+                    confirmText: "Xóa"
                 }
-            } catch (error) {
+            );
+
+            await deleteProductAdmin(productId);
+
+            // Remove product from local state
+            setProducts(
+                products.filter(
+                    (product) => product.productId !== productId
+                )
+            );
+            setTotalCount((prevCount) => prevCount - 1);
+
+            showSuccess("Đã xóa sản phẩm thành công!");
+
+            // Close modal if the deleted product is currently being viewed
+            if (selectedProduct?.productId === productId) {
+                setShowDetailModal(false);
+                setSelectedProduct(null);
+            }
+        } catch (error) {
+            if (error !== false) { // false means user cancelled, don't show error
                 console.error("Error deleting product:", error);
-                alert("Không thể xóa sản phẩm. Vui lòng thử lại.");
+                showError("Không thể xóa sản phẩm. Vui lòng thử lại.");
             }
         }
     };

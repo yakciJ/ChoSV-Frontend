@@ -14,6 +14,7 @@ import {
     AlertTriangle,
 } from "lucide-react";
 import { getAllUsers, banUser, deleteUser } from "../../services/userService";
+import { useDialog } from "../../hooks/useDialog";
 
 const ManageUser = () => {
     const [users, setUsers] = useState([]);
@@ -26,6 +27,8 @@ const ManageUser = () => {
     const [hasNext, setHasNext] = useState(false);
     const [hasPrevious, setHasPrevious] = useState(false);
     const [error, setError] = useState(null);
+    
+    const { confirm, confirmDelete, showSuccess, showError } = useDialog();
 
     useEffect(() => {
         fetchUsers();
@@ -57,11 +60,13 @@ const ManageUser = () => {
             ? "Bạn có chắc chắn muốn bỏ cấm người dùng này?"
             : "Bạn có chắc chắn muốn cấm người dùng này?";
 
-        if (!window.confirm(confirmMessage)) {
-            return;
-        }
-
         try {
+            await confirm(confirmMessage, {
+                title: isBanned ? "Bỏ cấm người dùng" : "Cấm người dùng",
+                confirmText: isBanned ? "Bỏ cấm" : "Cấm",
+                type: "warning"
+            });
+
             const response = await banUser(userId);
             console.log("Ban user response:", response);
 
@@ -76,33 +81,40 @@ const ManageUser = () => {
 
                 const successMessage =
                     response.message || `Đã ${action} người dùng thành công!`;
-                alert(successMessage);
+                showSuccess(successMessage);
             }
         } catch (error) {
-            console.error("Error updating user ban status:", error);
-            alert(`Không thể ${action} người dùng. Vui lòng thử lại.`);
+            if (error !== false) { // false means user cancelled, don't show error
+                console.error("Error updating user ban status:", error);
+                showError(`Không thể ${action} người dùng. Vui lòng thử lại.`);
+            }
         }
     };
 
     const handleDeleteUser = async (userId) => {
-        if (window.confirm("Bạn có chắc chắn muốn xóa người dùng này?")) {
-            try {
-                const response = await deleteUser(userId);
+        try {
+            await confirmDelete("Bạn có chắc chắn muốn xóa người dùng này?", {
+                title: "Xóa người dùng",
+                confirmText: "Xóa"
+            });
 
-                if (response.status === 200) {
-                    // Remove user from local state
-                    setUsers(users.filter((user) => user.userId !== userId));
-                    setTotalCount((prev) => prev - 1);
-                    console.log("Đã xóa người dùng thành công");
+            const response = await deleteUser(userId);
 
-                    // If current page becomes empty and it's not the first page, go to previous page
-                    if (users.length === 1 && currentPage > 1) {
-                        setCurrentPage(currentPage - 1);
-                    }
+            if (response && (response.status === 200 || response)) {
+                // Remove user from local state
+                setUsers(users.filter((user) => user.userId !== userId));
+                setTotalCount((prev) => prev - 1);
+                showSuccess("Đã xóa người dùng thành công!");
+
+                // If current page becomes empty and it's not the first page, go to previous page
+                if (users.length === 1 && currentPage > 1) {
+                    setCurrentPage(currentPage - 1);
                 }
-            } catch (error) {
+            }
+        } catch (error) {
+            if (error !== false) { // false means user cancelled, don't show error
                 console.error("Error deleting user:", error);
-                alert("Không thể xóa người dùng. Vui lòng thử lại.");
+                showError("Không thể xóa người dùng. Vui lòng thử lại.");
             }
         }
     };
