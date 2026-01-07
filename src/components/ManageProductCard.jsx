@@ -18,14 +18,14 @@ export default function ManageProductCard({
     const [isDeleting, setIsDeleting] = useState(false);
     const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
     const [currentStatus, setCurrentStatus] = useState(product.status);
-    
+
     const { confirmDelete, showError } = useDialog();
 
     const removeProduct = async () => {
         try {
             await confirmDelete("Bạn có chắc chắn muốn xóa sản phẩm này?", {
                 title: "Xóa sản phẩm",
-                confirmText: "Xóa"
+                confirmText: "Xóa",
             });
 
             setIsDeleting(true);
@@ -34,7 +34,8 @@ export default function ManageProductCard({
                 onDelete(product.productId);
             }
         } catch (error) {
-            if (error !== false) { // false means user cancelled, don't show error
+            if (error !== false) {
+                // false means user cancelled, don't show error
                 console.error("Error deleting product:", error);
                 showError("Xóa sản phẩm thất bại. Vui lòng thử lại.");
             }

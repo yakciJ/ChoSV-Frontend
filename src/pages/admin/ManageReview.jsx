@@ -14,6 +14,7 @@ import {
     deleteUserWallPostAdmin,
 } from "../../services/userWallPostService";
 import { formatDateLocal } from "../../helpers/formatDate";
+import { useDialog } from "../../hooks/useDialog";
 
 const ManageReview = () => {
     const [reviews, setReviews] = useState([]);
@@ -26,33 +27,8 @@ const ManageReview = () => {
     const [hasNext, setHasNext] = useState(false);
     const [hasPrevious, setHasPrevious] = useState(false);
     const [error, setError] = useState(null);
-    const [success, setSuccess] = useState(null);
 
-    // Delete modal states
-    const [showDeleteModal, setShowDeleteModal] = useState(false);
-    const [selectedReview, setSelectedReview] = useState(null);
-
-    useEffect(() => {
-        fetchReviews();
-    }, [currentPage, pageSize]);
-
-    useEffect(() => {
-        if (success) {
-            const timer = setTimeout(() => {
-                setSuccess(null);
-            }, 3000);
-            return () => clearTimeout(timer);
-        }
-    }, [success]);
-
-    useEffect(() => {
-        if (error) {
-            const timer = setTimeout(() => {
-                setError(null);
-            }, 5000);
-            return () => clearTimeout(timer);
-        }
-    }, [error]);
+    const { confirmDelete, showSuccess, showError } = useDialog();
 
     const fetchReviews = useCallback(async () => {
         setLoading(true);
@@ -78,28 +54,36 @@ const ManageReview = () => {
         fetchReviews();
     }, [fetchReviews]);
 
-    const handleDeleteReview = async () => {
+    useEffect(() => {
+        if (error) {
+            const timer = setTimeout(() => {
+                setError(null);
+            }, 5000);
+            return () => clearTimeout(timer);
+        }
+    }, [error]);
+
+    const handleDeleteClick = async (review) => {
         try {
+            await confirmDelete(
+                `Bạn có chắc chắn muốn xóa đánh giá từ "${review.posterUserName}"?`,
+                {
+                    title: "Xóa đánh giá",
+                    confirmText: "Xóa",
+                }
+            );
+
             setError(null);
-            await deleteUserWallPostAdmin(selectedReview.userWallPostId);
-            setSuccess("Xóa đánh giá thành công!");
-            setShowDeleteModal(false);
-            setSelectedReview(null);
+            await deleteUserWallPostAdmin(review.userWallPostId);
+            showSuccess("Xóa đánh giá thành công!");
             fetchReviews();
         } catch (error) {
-            console.error("Error deleting review:", error);
-            setError("Không thể xóa đánh giá. Vui lòng thử lại.");
+            if (error !== false) {
+                // false means user cancelled, don't show error
+                console.error("Error deleting review:", error);
+                showError("Không thể xóa đánh giá. Vui lòng thử lại.");
+            }
         }
-    };
-
-    const openDeleteModal = (review) => {
-        setSelectedReview(review);
-        setShowDeleteModal(true);
-    };
-
-    const closeDeleteModal = () => {
-        setShowDeleteModal(false);
-        setSelectedReview(null);
     };
 
     // Filter reviews based on search query
@@ -146,12 +130,6 @@ const ManageReview = () => {
                 <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center gap-2">
                     <AlertTriangle className="w-5 h-5" />
                     {error}
-                </div>
-            )}
-
-            {success && (
-                <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg">
-                    {success}
                 </div>
             )}
 
@@ -241,7 +219,7 @@ const ManageReview = () => {
                                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                             <button
                                                 onClick={() =>
-                                                    openDeleteModal(review)
+                                                    handleDeleteClick(review)
                                                 }
                                                 className="text-red-600 hover:text-red-900 transition-colors p-2 hover:bg-red-50 rounded"
                                                 title="Xóa đánh giá"
@@ -348,50 +326,6 @@ const ManageReview = () => {
                             Sau
                             <ChevronRight className="w-4 h-4" />
                         </button>
-                    </div>
-                </div>
-            )}
-
-            {/* Delete Confirmation Modal */}
-            {showDeleteModal && selectedReview && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-lg p-6 w-full max-w-md">
-                        <div className="flex items-center mb-4">
-                            <AlertTriangle className="w-8 h-8 text-red-500 mr-3" />
-                            <h2 className="text-xl font-bold">Xác nhận xóa</h2>
-                        </div>
-
-                        <div className="mb-6">
-                            <p className="text-gray-600 mb-3">
-                                Bạn có chắc chắn muốn xóa đánh giá này không?
-                            </p>
-                            <div className="bg-gray-50 p-3 rounded-lg">
-                                <p className="text-sm text-gray-600 mb-1">
-                                    <strong>Người viết:</strong>{" "}
-                                    {selectedReview.posterUserName}
-                                </p>
-                                <p className="text-sm text-gray-600">
-                                    <strong>Nội dung:</strong>{" "}
-                                    {selectedReview.commentContent}
-                                </p>
-                            </div>
-                        </div>
-
-                        <div className="flex justify-end space-x-3">
-                            <button
-                                onClick={closeDeleteModal}
-                                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
-                            >
-                                Hủy
-                            </button>
-                            <button
-                                onClick={handleDeleteReview}
-                                className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors flex items-center gap-2"
-                            >
-                                <Trash2 className="w-4 h-4" />
-                                Xóa
-                            </button>
-                        </div>
                     </div>
                 </div>
             )}

@@ -48,13 +48,13 @@ const DialogProvider = ({ children }) => {
                 },
                 onCancel: () => {
                     reject(false);
-                }
+                },
             });
         });
     };
 
     const hideConfirm = () => {
-        setConfirmDialog(prev => ({ ...prev, isOpen: false }));
+        setConfirmDialog((prev) => ({ ...prev, isOpen: false }));
     };
 
     // Notification Functions
@@ -74,29 +74,31 @@ const DialogProvider = ({ children }) => {
     };
 
     const hideNotification = () => {
-        setNotification(prev => ({ ...prev, isOpen: false }));
+        setNotification((prev) => ({ ...prev, isOpen: false }));
     };
 
     // Convenience methods
-    const showSuccess = (message) => showNotification({ message, type: "success" });
+    const showSuccess = (message) =>
+        showNotification({ message, type: "success" });
     const showError = (message) => showNotification({ message, type: "error" });
-    const showWarning = (message) => showNotification({ message, type: "warning" });
+    const showWarning = (message) =>
+        showNotification({ message, type: "warning" });
     const showInfo = (message) => showNotification({ message, type: "info" });
 
     const confirm = (message, options = {}) => {
-        return showConfirm({ 
-            message, 
+        return showConfirm({
+            message,
             type: "warning",
-            ...options 
+            ...options,
         });
     };
 
     const confirmDelete = (message, options = {}) => {
-        return showConfirm({ 
-            message, 
+        return showConfirm({
+            message,
             type: "danger",
             confirmText: "Xóa",
-            ...options 
+            ...options,
         });
     };
 
@@ -105,7 +107,7 @@ const DialogProvider = ({ children }) => {
         showConfirm,
         confirm,
         confirmDelete,
-        
+
         // Notification methods
         showNotification,
         showSuccess,

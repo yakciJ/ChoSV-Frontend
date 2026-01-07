@@ -54,7 +54,7 @@ export default function UserProfile() {
         (state) => state.user
     );
     const currentUserId = currentUser?.userId;
-    
+
     const { confirm, showError } = useDialog();
 
     const [profile, setProfile] = useState(null);
@@ -262,7 +262,7 @@ export default function UserProfile() {
             await confirm("Xóa bình luận này?", {
                 title: "Xóa bình luận",
                 confirmText: "Xóa",
-                type: "warning"
+                type: "warning",
             });
 
             await deleteUserWallPost(post.userWallPostId);
@@ -276,7 +276,8 @@ export default function UserProfile() {
                 await fetchWallPosts();
             }
         } catch (error) {
-            if (error !== false) { // false means user cancelled, don't show error
+            if (error !== false) {
+                // false means user cancelled, don't show error
                 console.error(error);
                 showError("Không thể xóa bình luận.");
             }

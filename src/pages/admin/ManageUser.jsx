@@ -27,7 +27,7 @@ const ManageUser = () => {
     const [hasNext, setHasNext] = useState(false);
     const [hasPrevious, setHasPrevious] = useState(false);
     const [error, setError] = useState(null);
-    
+
     const { confirm, confirmDelete, showSuccess, showError } = useDialog();
 
     useEffect(() => {
@@ -64,7 +64,7 @@ const ManageUser = () => {
             await confirm(confirmMessage, {
                 title: isBanned ? "Bỏ cấm người dùng" : "Cấm người dùng",
                 confirmText: isBanned ? "Bỏ cấm" : "Cấm",
-                type: "warning"
+                type: "warning",
             });
 
             const response = await banUser(userId);
@@ -84,7 +84,8 @@ const ManageUser = () => {
                 showSuccess(successMessage);
             }
         } catch (error) {
-            if (error !== false) { // false means user cancelled, don't show error
+            if (error !== false) {
+                // false means user cancelled, don't show error
                 console.error("Error updating user ban status:", error);
                 showError(`Không thể ${action} người dùng. Vui lòng thử lại.`);
             }
@@ -95,7 +96,7 @@ const ManageUser = () => {
         try {
             await confirmDelete("Bạn có chắc chắn muốn xóa người dùng này?", {
                 title: "Xóa người dùng",
-                confirmText: "Xóa"
+                confirmText: "Xóa",
             });
 
             const response = await deleteUser(userId);
@@ -112,7 +113,8 @@ const ManageUser = () => {
                 }
             }
         } catch (error) {
-            if (error !== false) { // false means user cancelled, don't show error
+            if (error !== false) {
+                // false means user cancelled, don't show error
                 console.error("Error deleting user:", error);
                 showError("Không thể xóa người dùng. Vui lòng thử lại.");
             }

@@ -17,20 +17,23 @@ import {
     deleteCategory,
 } from "../../services/categoryService";
 import { uploadImage } from "../../services/imageService";
+import { useDialog } from "../../hooks/useDialog";
 
 const ManageCategory = () => {
     const [categories, setCategories] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
     const [error, setError] = useState(null);
-    const [success, setSuccess] = useState(null);
     const [uploadingImage, setUploadingImage] = useState(false);
 
     // Modal states
     const [showAddModal, setShowAddModal] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
-    const [showDeleteModal, setShowDeleteModal] = useState(false);
-    const [selectedCategory, setSelectedCategory] = useState(null); // Form states
+    const [selectedCategory, setSelectedCategory] = useState(null);
+
+    const { confirmDelete, showSuccess, showError } = useDialog();
+
+    // Form states
     const [formData, setFormData] = useState({
         name: "",
         imageUrl: "",
@@ -41,15 +44,6 @@ const ManageCategory = () => {
     useEffect(() => {
         fetchCategories();
     }, []);
-
-    useEffect(() => {
-        if (success) {
-            const timer = setTimeout(() => {
-                setSuccess(null);
-            }, 3000);
-            return () => clearTimeout(timer);
-        }
-    }, [success]);
 
     useEffect(() => {
         if (error) {
@@ -78,13 +72,13 @@ const ManageCategory = () => {
         try {
             setError(null);
             await createCategory(formData);
-            setSuccess("Tạo danh mục thành công!");
+            showSuccess("Tạo danh mục thành công!");
             setShowAddModal(false);
             resetForm();
             fetchCategories();
         } catch (error) {
             console.error("Error creating category:", error);
-            setError("Không thể tạo danh mục. Vui lòng thử lại.");
+            showError("Không thể tạo danh mục. Vui lòng thử lại.");
         }
     };
 
@@ -96,26 +90,13 @@ const ManageCategory = () => {
                 categoryId: selectedCategory.categoryId,
             };
             await updateCategory(updateData);
-            setSuccess("Cập nhật danh mục thành công!");
+            showSuccess("Cập nhật danh mục thành công!");
             setShowEditModal(false);
             resetForm();
             fetchCategories();
         } catch (error) {
             console.error("Error updating category:", error);
-            setError("Không thể cập nhật danh mục. Vui lòng thử lại.");
-        }
-    };
-
-    const handleDeleteCategory = async () => {
-        try {
-            setError(null);
-            await deleteCategory(selectedCategory.categoryId);
-            setSuccess("Xóa danh mục thành công!");
-            setShowDeleteModal(false);
-            fetchCategories();
-        } catch (error) {
-            console.error("Error deleting category:", error);
-            setError("Không thể xóa danh mục. Vui lòng thử lại.");
+            showError("Không thể cập nhật danh mục. Vui lòng thử lại.");
         }
     };
 
@@ -135,9 +116,31 @@ const ManageCategory = () => {
         setShowEditModal(true);
     };
 
-    const openDeleteModal = (category) => {
-        setSelectedCategory(category);
-        setShowDeleteModal(true);
+    const handleDeleteClick = async (category) => {
+        try {
+            await confirmDelete(
+                `Bạn có chắc chắn muốn xóa danh mục "${category.name}" không?${
+                    category.childs && category.childs.length > 0
+                        ? `\nDanh mục này có ${category.childs.length} danh mục con!`
+                        : ""
+                }`,
+                {
+                    title: "Xóa danh mục",
+                    confirmText: "Xóa",
+                }
+            );
+
+            setError(null);
+            await deleteCategory(category.categoryId);
+            showSuccess("Xóa danh mục thành công!");
+            fetchCategories();
+        } catch (error) {
+            if (error !== false) {
+                // false means user cancelled, don't show error
+                console.error("Error deleting category:", error);
+                showError("Không thể xóa danh mục. Vui lòng thử lại.");
+            }
+        }
     };
 
     const resetForm = () => {
@@ -184,7 +187,6 @@ const ManageCategory = () => {
     const closeModals = () => {
         setShowAddModal(false);
         setShowEditModal(false);
-        setShowDeleteModal(false);
         resetForm();
     };
 
@@ -240,12 +242,6 @@ const ManageCategory = () => {
                 <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center gap-2">
                     <AlertTriangle className="w-5 h-5" />
                     {error}
-                </div>
-            )}
-
-            {success && (
-                <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg">
-                    {success}
                 </div>
             )}
 
@@ -347,7 +343,7 @@ const ManageCategory = () => {
                                             </button>
                                             <button
                                                 onClick={() =>
-                                                    openDeleteModal(category)
+                                                    handleDeleteClick(category)
                                                 }
                                                 className="text-red-600 hover:text-red-900 transition-colors"
                                             >
@@ -678,48 +674,6 @@ const ManageCategory = () => {
                             >
                                 <Save className="w-4 h-4" />
                                 Cập nhật
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Delete Confirmation Modal */}
-            {showDeleteModal && selectedCategory && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-lg p-6 w-full max-w-md">
-                        <div className="flex items-center mb-4">
-                            <AlertTriangle className="w-8 h-8 text-red-500 mr-3" />
-                            <h2 className="text-xl font-bold">Xác nhận xóa</h2>
-                        </div>
-
-                        <p className="text-gray-600 mb-6">
-                            Bạn có chắc chắn muốn xóa danh mục "
-                            {selectedCategory.name}" không?
-                            {selectedCategory.childs &&
-                                selectedCategory.childs.length > 0 && (
-                                    <span className="text-red-600 font-medium">
-                                        <br />
-                                        Danh mục này có{" "}
-                                        {selectedCategory.childs.length} danh
-                                        mục con!
-                                    </span>
-                                )}
-                        </p>
-
-                        <div className="flex justify-end space-x-3">
-                            <button
-                                onClick={closeModals}
-                                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
-                            >
-                                Hủy
-                            </button>
-                            <button
-                                onClick={handleDeleteCategory}
-                                className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors flex items-center gap-2"
-                            >
-                                <Trash2 className="w-4 h-4" />
-                                Xóa
                             </button>
                         </div>
                     </div>

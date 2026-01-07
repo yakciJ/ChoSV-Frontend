@@ -36,7 +36,7 @@ const ManageProduct = () => {
     const [error, setError] = useState(null);
     const [selectedProduct, setSelectedProduct] = useState(null);
     const [showDetailModal, setShowDetailModal] = useState(false);
-    
+
     const { confirmDelete, showSuccess, showError } = useDialog();
 
     const statusOptions = [
@@ -100,7 +100,9 @@ const ManageProduct = () => {
             setShowDetailModal(false);
         } catch (error) {
             console.error("Error updating product status:", error);
-            showError("Không thể cập nhật trạng thái sản phẩm. Vui lòng thử lại.");
+            showError(
+                "Không thể cập nhật trạng thái sản phẩm. Vui lòng thử lại."
+            );
         }
     };
 
@@ -110,7 +112,7 @@ const ManageProduct = () => {
                 `Bạn có chắc chắn muốn xóa sản phẩm "${productName}"?`,
                 {
                     title: "Xóa sản phẩm",
-                    confirmText: "Xóa"
+                    confirmText: "Xóa",
                 }
             );
 
@@ -118,9 +120,7 @@ const ManageProduct = () => {
 
             // Remove product from local state
             setProducts(
-                products.filter(
-                    (product) => product.productId !== productId
-                )
+                products.filter((product) => product.productId !== productId)
             );
             setTotalCount((prevCount) => prevCount - 1);
 
@@ -132,7 +132,8 @@ const ManageProduct = () => {
                 setSelectedProduct(null);
             }
         } catch (error) {
-            if (error !== false) { // false means user cancelled, don't show error
+            if (error !== false) {
+                // false means user cancelled, don't show error
                 console.error("Error deleting product:", error);
                 showError("Không thể xóa sản phẩm. Vui lòng thử lại.");
             }

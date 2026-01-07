@@ -1,16 +1,16 @@
 import React from "react";
 import { AlertTriangle, X } from "lucide-react";
 
-const ConfirmDialog = ({ 
-    isOpen, 
-    onClose, 
-    onConfirm, 
+const ConfirmDialog = ({
+    isOpen,
+    onClose,
+    onConfirm,
     onCancel,
-    title = "Xác nhận", 
-    message, 
-    confirmText = "Xác nhận", 
+    title = "Xác nhận",
+    message,
+    confirmText = "Xác nhận",
     cancelText = "Hủy",
-    type = "warning" // warning, danger, info
+    type = "warning", // warning, danger, info
 }) => {
     if (!isOpen) return null;
 
@@ -29,11 +29,15 @@ const ConfirmDialog = ({
             case "danger":
                 return <AlertTriangle className="w-8 h-8 text-red-500 mr-3" />;
             case "warning":
-                return <AlertTriangle className="w-8 h-8 text-yellow-500 mr-3" />;
+                return (
+                    <AlertTriangle className="w-8 h-8 text-yellow-500 mr-3" />
+                );
             case "info":
                 return <AlertTriangle className="w-8 h-8 text-blue-500 mr-3" />;
             default:
-                return <AlertTriangle className="w-8 h-8 text-yellow-500 mr-3" />;
+                return (
+                    <AlertTriangle className="w-8 h-8 text-yellow-500 mr-3" />
+                );
         }
     };
 
@@ -65,11 +69,7 @@ const ConfirmDialog = ({
                 </div>
 
                 <div className="text-gray-600 mb-6">
-                    {typeof message === "string" ? (
-                        <p>{message}</p>
-                    ) : (
-                        message
-                    )}
+                    {typeof message === "string" ? <p>{message}</p> : message}
                 </div>
 
                 <div className="flex justify-end space-x-3">

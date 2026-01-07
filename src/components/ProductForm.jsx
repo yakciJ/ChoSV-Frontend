@@ -17,7 +17,7 @@ export default function ProductForm({ mode, productId }) {
     const [categories, setCategories] = useState([]);
     const [selectedParentCategory, setSelectedParentCategory] = useState(null);
     const [uploadingImage, setUploadingImage] = useState(false);
-    
+
     const { showSuccess, showError } = useDialog();
 
     const [formData, setFormData] = useState({

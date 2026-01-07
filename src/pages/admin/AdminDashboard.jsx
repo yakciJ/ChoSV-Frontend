@@ -4,11 +4,7 @@ import {
     Package,
     MessageSquare,
     FileText,
-    TrendingUp,
-    TrendingDown,
     Activity,
-    Calendar,
-    Eye,
     CheckCircle,
     XCircle,
     Clock,
@@ -17,6 +13,7 @@ import { getAllUsers } from "../../services/userService";
 import { getAllProductsAdmin } from "../../services/productService";
 import { getAllCategories } from "../../services/categoryService";
 import { getAllUserWallPosts } from "../../services/userWallPostService";
+import { formatDateLocal } from "../../helpers/formatDate";
 
 const flattenCategories = (categories) => {
     let result = [];
@@ -59,7 +56,6 @@ const AdminDashboard = () => {
         setError(null);
 
         try {
-            // Fetch all data in parallel
             const [
                 usersResponse,
                 productsResponse,
@@ -145,46 +141,43 @@ const AdminDashboard = () => {
         fetchDashboardData();
     }, [fetchDashboardData]);
 
-    const getStatusColor = (status) => {
-        switch (status?.toLowerCase()) {
-            case "pending":
-                return "text-yellow-600 bg-yellow-100";
-            case "approved":
-                return "text-green-600 bg-green-100";
-            case "rejected":
-                return "text-red-600 bg-red-100";
-            case "sold":
-                return "text-blue-600 bg-blue-100";
-            default:
-                return "text-gray-600 bg-gray-100";
-        }
-    };
+    const getStatusBadge = (status) => {
+        const statusConfig = {
+            Pending: {
+                bg: "bg-yellow-100",
+                text: "text-yellow-800",
+                label: "Chờ duyệt",
+            },
+            Approved: {
+                bg: "bg-green-100",
+                text: "text-green-800",
+                label: "Đã duyệt",
+            },
+            Rejected: {
+                bg: "bg-red-100",
+                text: "text-red-800",
+                label: "Bị từ chối",
+            },
+            Sold: {
+                bg: "bg-blue-100",
+                text: "text-blue-800",
+                label: "Đã bán",
+            },
+        };
 
-    const getStatusIcon = (status) => {
-        switch (status?.toLowerCase()) {
-            case "pending":
-                return <Clock className="w-4 h-4" />;
-            case "approved":
-                return <CheckCircle className="w-4 h-4" />;
-            case "rejected":
-                return <XCircle className="w-4 h-4" />;
-            default:
-                return <Activity className="w-4 h-4" />;
-        }
-    };
+        const config = statusConfig[status] || {
+            bg: "bg-gray-100",
+            text: "text-gray-800",
+            label: status || "Không rõ",
+        };
 
-    const formatDate = (dateString) => {
-        try {
-            return new Date(dateString).toLocaleDateString("vi-VN", {
-                day: "2-digit",
-                month: "2-digit",
-                year: "numeric",
-                hour: "2-digit",
-                minute: "2-digit",
-            });
-        } catch {
-            return "N/A";
-        }
+        return (
+            <span
+                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${config.bg} ${config.text}`}
+            >
+                {config.label}
+            </span>
+        );
     };
 
     if (loading) {
@@ -346,25 +339,55 @@ const AdminDashboard = () => {
                                     className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
                                 >
                                     <div className="flex items-center gap-3">
-                                        <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
-                                            <span className="text-sm font-medium text-white">
-                                                {user.userName?.[0]?.toUpperCase() ||
-                                                    "U"}
-                                            </span>
+                                        <div className="flex-shrink-0 h-8 w-8">
+                                            {user.avatarImage ? (
+                                                <img
+                                                    className="h-8 w-8 rounded-full object-cover"
+                                                    src={user.avatarImage}
+                                                    alt={
+                                                        user.fullName ||
+                                                        user.userName
+                                                    }
+                                                    onError={(e) => {
+                                                        e.target.src =
+                                                            "https://via.placeholder.com/32/6B7280/FFFFFF?text=" +
+                                                            encodeURIComponent(
+                                                                (
+                                                                    user.fullName ||
+                                                                    user.userName
+                                                                )
+                                                                    .charAt(0)
+                                                                    .toUpperCase()
+                                                            );
+                                                    }}
+                                                />
+                                            ) : (
+                                                <div className="h-8 w-8 bg-blue-500 rounded-full flex items-center justify-center">
+                                                    <span className="text-sm font-medium text-white">
+                                                        {(
+                                                            user.fullName ||
+                                                            user.userName
+                                                        )
+                                                            .charAt(0)
+                                                            .toUpperCase()}
+                                                    </span>
+                                                </div>
+                                            )}
                                         </div>
                                         <div>
                                             <p className="font-medium text-gray-900">
-                                                {user.userName || "N/A"}
+                                                {user.fullName || user.userName}
                                             </p>
                                             <p className="text-sm text-gray-500">
-                                                {user.email || "N/A"}
+                                                {user.userEmail ||
+                                                    "Không có email"}
                                             </p>
                                         </div>
                                     </div>
                                     <span className="text-sm text-gray-500">
                                         {user.createdAt
-                                            ? formatDate(user.createdAt)
-                                            : "N/A"}
+                                            ? formatDateLocal(user.createdAt)
+                                            : "Không rõ"}
                                     </span>
                                 </div>
                             ))
@@ -394,25 +417,19 @@ const AdminDashboard = () => {
                                     >
                                         <div className="flex-1 min-w-0">
                                             <p className="font-medium text-gray-900 truncate">
-                                                {product.productName || "N/A"}
+                                                {product.productName ||
+                                                    "Không có tên"}
                                             </p>
                                             <div className="flex items-center gap-2 mt-1">
-                                                <span
-                                                    className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
-                                                        product.status
-                                                    )}`}
-                                                >
-                                                    {getStatusIcon(
-                                                        product.status
-                                                    )}
-                                                    {product.status || "N/A"}
-                                                </span>
+                                                {getStatusBadge(product.status)}
                                             </div>
                                         </div>
                                         <span className="text-sm text-gray-500 ml-2">
-                                            {product.createdAt
-                                                ? formatDate(product.createdAt)
-                                                : "N/A"}
+                                            {product.createdDate
+                                                ? formatDateLocal(
+                                                      product.createdDate
+                                                  )
+                                                : "Không rõ"}
                                         </span>
                                     </div>
                                 )
@@ -450,17 +467,19 @@ const AdminDashboard = () => {
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <p className="font-medium text-gray-900">
-                                            {review.posterUserName || "N/A"}
+                                            {review.posterUserName ||
+                                                "Người dùng ẩn danh"}
                                         </p>
                                         <p className="text-sm text-gray-600 mt-1 line-clamp-2">
-                                            {review.commentContent || "N/A"}
+                                            {review.commentContent ||
+                                                "Không có nội dung"}
                                         </p>
                                     </div>
                                 </div>
                                 <span className="text-sm text-gray-500 ml-3 flex-shrink-0">
                                     {review.createdAt
-                                        ? formatDate(review.createdAt)
-                                        : "N/A"}
+                                        ? formatDateLocal(review.createdAt)
+                                        : "Không rõ"}
                                 </span>
                             </div>
                         ))

@@ -1,13 +1,13 @@
 import React from "react";
 import { CheckCircle, AlertCircle, X, AlertTriangle, Info } from "lucide-react";
 
-const Notification = ({ 
-    isOpen, 
-    onClose, 
-    message, 
+const Notification = ({
+    isOpen,
+    onClose,
+    message,
     type = "info", // success, error, warning, info
     autoClose = true,
-    duration = 3000 
+    duration = 3000,
 }) => {
     React.useEffect(() => {
         if (isOpen && autoClose) {
@@ -67,7 +67,9 @@ const Notification = ({
 
     return (
         <div className="fixed top-4 right-4 z-50">
-            <div className={`flex items-center p-4 rounded-lg border shadow-lg ${getBgColor()}`}>
+            <div
+                className={`flex items-center p-4 rounded-lg border shadow-lg ${getBgColor()}`}
+            >
                 {getIcon()}
                 <div className={`ml-3 text-sm font-medium ${getTextColor()}`}>
                     {message}

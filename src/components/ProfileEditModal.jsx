@@ -13,7 +13,7 @@ const ProfileEditModal = ({ isOpen, onClose, profile, onProfileUpdate }) => {
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
-    
+
     const { showSuccess, showError } = useDialog();
 
     if (!isOpen) return null;
