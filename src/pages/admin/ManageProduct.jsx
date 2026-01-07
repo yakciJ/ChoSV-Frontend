@@ -1,18 +1,16 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
     Search,
-    Filter,
     Eye,
     CheckCircle,
     XCircle,
     ChevronLeft,
     ChevronRight,
-    Package,
     User,
     Calendar,
-    Tag,
     X,
     ImageIcon,
+    Trash2,
 } from "lucide-react";
 import {
     getAllProductsAdmin,
@@ -398,7 +396,7 @@ const ManageProduct = () => {
                                             </div>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                            <div className="flex items-center gap-2 justify-end">
+                                            <div className="flex justify-end gap-2">
                                                 <button
                                                     onClick={() =>
                                                         openDetailModal(product)
@@ -417,7 +415,7 @@ const ManageProduct = () => {
                                                     }
                                                     className="inline-flex items-center px-3 py-1.5 rounded-md text-xs font-medium bg-red-100 text-red-700 hover:bg-red-200 transition-colors"
                                                 >
-                                                    <X className="w-3 h-3 mr-1" />
+                                                    <Trash2 className="w-3 h-3 mr-1" />
                                                     Xóa
                                                 </button>
                                             </div>
@@ -504,7 +502,7 @@ const ManageProduct = () => {
 
             {/* Product Detail Modal */}
             {showDetailModal && selectedProduct && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+                <div className="fixed inset-0 bg-black !mt-0 bg-opacity-50 z-50 flex items-center justify-center p-4">
                     <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
                         <div className="p-6">
                             {/* Modal Header */}

@@ -116,7 +116,7 @@ const ManageReview = () => {
             {/* Header */}
             <div className="flex justify-between items-center">
                 <div>
-                    <h1 className="text-3xl font-bold text-gray-900">
+                    <h1 className="text-2xl font-bold text-gray-900">
                         Quản lý đánh giá
                     </h1>
                     <p className="text-gray-600 mt-1">
@@ -134,33 +134,38 @@ const ManageReview = () => {
             )}
 
             {/* Search and Filters */}
-            <div className="flex gap-4 items-center">
-                <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                    <input
-                        type="text"
-                        placeholder="Tìm kiếm theo nội dung hoặc tên người dùng..."
-                        className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                    />
+            <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+                <div className="flex gap-4">
+                    <div className="flex-1 relative">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                        <input
+                            type="text"
+                            placeholder="Tìm kiếm theo nội dung hoặc tên người dùng..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        />
+                    </div>
+                    <select
+                        value={pageSize}
+                        onChange={(e) => {
+                            setPageSize(Number(e.target.value));
+                            setCurrentPage(1); // Reset to first page when changing page size
+                        }}
+                        className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                        <option value={10}>10 / trang</option>
+                        <option value={25}>25 / trang</option>
+                        <option value={50}>50 / trang</option>
+                    </select>
                 </div>
-                <select
-                    value={pageSize}
-                    onChange={(e) => setPageSize(parseInt(e.target.value))}
-                    className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                    <option value={10}>10 / trang</option>
-                    <option value={25}>25 / trang</option>
-                    <option value={50}>50 / trang</option>
-                </select>
             </div>
 
             {/* Reviews Table */}
-            <div className="bg-white rounded-lg shadow overflow-hidden">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
                 <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50">
+                    <table className="w-full">
+                        <thead className="bg-gray-50 border-b border-gray-200">
                             <tr>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     Người viết
@@ -171,7 +176,7 @@ const ManageReview = () => {
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     Ngày tạo
                                 </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     Thao tác
                                 </th>
                             </tr>
@@ -216,16 +221,21 @@ const ManageReview = () => {
                                                 </span>
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                            <button
-                                                onClick={() =>
-                                                    handleDeleteClick(review)
-                                                }
-                                                className="text-red-600 hover:text-red-900 transition-colors p-2 hover:bg-red-50 rounded"
-                                                title="Xóa đánh giá"
-                                            >
-                                                <Trash2 className="w-4 h-4" />
-                                            </button>
+                                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                            <div className="flex justify-end gap-2">
+                                                <button
+                                                    onClick={() =>
+                                                        handleDeleteClick(
+                                                            review
+                                                        )
+                                                    }
+                                                    className="inline-flex items-center px-3 py-1.5 rounded-md text-xs font-medium bg-red-100 text-red-700 hover:bg-red-200 transition-colors"
+                                                    title="Xóa đánh giá"
+                                                >
+                                                    <Trash2 className="w-3 h-3 mr-1" />
+                                                    Xóa
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                 ))
@@ -252,30 +262,20 @@ const ManageReview = () => {
             </div>
 
             {/* Pagination */}
-            {totalPages > 1 && (
-                <div className="flex justify-between items-center">
-                    <div className="text-sm text-gray-700">
-                        Hiển thị{" "}
-                        <span className="font-medium">
-                            {(currentPage - 1) * pageSize + 1}
-                        </span>{" "}
-                        đến{" "}
-                        <span className="font-medium">
-                            {Math.min(currentPage * pageSize, totalCount)}
-                        </span>{" "}
-                        của <span className="font-medium">{totalCount}</span>{" "}
-                        đánh giá
+            <div className="bg-white px-4 py-3 border-t border-gray-200 sm:px-6">
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center text-sm text-gray-700">
+                        <span>
+                            Hiển thị {(currentPage - 1) * pageSize + 1} đến{" "}
+                            {Math.min(currentPage * pageSize, totalCount)} trong
+                            tổng số {totalCount} kết quả
+                        </span>
                     </div>
-
-                    <div className="flex gap-2">
+                    <div className="flex items-center gap-2">
                         <button
                             onClick={() => handlePageChange(currentPage - 1)}
                             disabled={!hasPrevious}
-                            className={`px-3 py-2 rounded-lg border flex items-center gap-2 ${
-                                !hasPrevious
-                                    ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                                    : "bg-white text-gray-700 hover:bg-gray-50 border-gray-300"
-                            }`}
+                            className="relative inline-flex items-center px-3 py-2 rounded-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             <ChevronLeft className="w-4 h-4" />
                             Trước
@@ -283,52 +283,34 @@ const ManageReview = () => {
 
                         <div className="flex gap-1">
                             {Array.from(
-                                { length: Math.min(5, totalPages) },
-                                (_, i) => {
-                                    const pageNumber = Math.max(
-                                        1,
-                                        Math.min(
-                                            currentPage - 2 + i,
-                                            totalPages - 4 + i
-                                        )
-                                    );
-
-                                    if (pageNumber > totalPages) return null;
-
-                                    return (
-                                        <button
-                                            key={pageNumber}
-                                            onClick={() =>
-                                                handlePageChange(pageNumber)
-                                            }
-                                            className={`px-3 py-2 rounded-lg border ${
-                                                pageNumber === currentPage
-                                                    ? "bg-blue-500 text-white border-blue-500"
-                                                    : "bg-white text-gray-700 hover:bg-gray-50 border-gray-300"
-                                            }`}
-                                        >
-                                            {pageNumber}
-                                        </button>
-                                    );
-                                }
-                            )}
+                                { length: totalPages },
+                                (_, i) => i + 1
+                            ).map((page) => (
+                                <button
+                                    key={page}
+                                    onClick={() => handlePageChange(page)}
+                                    className={`relative inline-flex items-center px-3 py-2 rounded-md border text-sm font-medium ${
+                                        page === currentPage
+                                            ? "border-blue-500 bg-blue-50 text-blue-600"
+                                            : "border-gray-300 bg-white text-gray-500 hover:bg-gray-50"
+                                    }`}
+                                >
+                                    {page}
+                                </button>
+                            ))}
                         </div>
 
                         <button
                             onClick={() => handlePageChange(currentPage + 1)}
                             disabled={!hasNext}
-                            className={`px-3 py-2 rounded-lg border flex items-center gap-2 ${
-                                !hasNext
-                                    ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                                    : "bg-white text-gray-700 hover:bg-gray-50 border-gray-300"
-                            }`}
+                            className="relative inline-flex items-center px-3 py-2 rounded-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             Sau
                             <ChevronRight className="w-4 h-4" />
                         </button>
                     </div>
                 </div>
-            )}
+            </div>
         </div>
     );
 };
