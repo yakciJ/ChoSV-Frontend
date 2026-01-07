@@ -52,11 +52,20 @@ const ManageUser = () => {
     };
 
     const handleBanUser = async (userId, isBanned) => {
+        const action = isBanned ? "bỏ cấm" : "cấm";
+        const confirmMessage = isBanned
+            ? "Bạn có chắc chắn muốn bỏ cấm người dùng này?"
+            : "Bạn có chắc chắn muốn cấm người dùng này?";
+
+        if (!window.confirm(confirmMessage)) {
+            return;
+        }
+
         try {
             const response = await banUser(userId);
+            console.log("Ban user response:", response);
 
-            if (response.status === 200) {
-                // Update local state - toggle ban status
+            if (response) {
                 setUsers(
                     users.map((user) =>
                         user.userId === userId
@@ -65,17 +74,13 @@ const ManageUser = () => {
                     )
                 );
 
-                // Show success message
-                const action = isBanned ? "bỏ cấm" : "cấm";
-                console.log(`Đã ${action} người dùng thành công`);
+                const successMessage =
+                    response.message || `Đã ${action} người dùng thành công!`;
+                alert(successMessage);
             }
         } catch (error) {
             console.error("Error updating user ban status:", error);
-            alert(
-                `Không thể ${
-                    isBanned ? "bỏ cấm" : "cấm"
-                } người dùng. Vui lòng thử lại.`
-            );
+            alert(`Không thể ${action} người dùng. Vui lòng thử lại.`);
         }
     };
 

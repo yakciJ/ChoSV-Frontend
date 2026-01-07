@@ -29,3 +29,19 @@ export const deleteUserWallPost = async (postId) => {
     const response = await axiosInstance.delete(url + `${postId}`);
     return response;
 };
+
+// Admin functions
+export const getAllUserWallPosts = async (page = 1, pageSize = 10) => {
+    const response = await axiosInstance.get(url, {
+        params: {
+            page,
+            pageSize,
+        },
+    });
+    return response;
+};
+
+export const deleteUserWallPostAdmin = async (postId) => {
+    const response = await axiosInstance.delete(url + `admin/${postId}`);
+    return response;
+};

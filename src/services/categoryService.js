@@ -20,3 +20,19 @@ export const getProductsByCategoryId = async (
     });
     return response;
 };
+
+// Admin category management functions
+export const createCategory = async (categoryData) => {
+    const response = await axiosInstance.post(url, categoryData);
+    return response;
+};
+
+export const updateCategory = async (categoryData) => {
+    const response = await axiosInstance.put(url, categoryData);
+    return response;
+};
+
+export const deleteCategory = async (categoryId) => {
+    const response = await axiosInstance.delete(url + categoryId);
+    return response;
+};

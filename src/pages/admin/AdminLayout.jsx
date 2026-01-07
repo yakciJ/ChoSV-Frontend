@@ -9,6 +9,7 @@ import {
     Settings,
     Shield,
     FileText,
+    MessageSquare,
 } from "lucide-react";
 
 const AdminLayout = () => {
@@ -23,9 +24,12 @@ const AdminLayout = () => {
             label: "Quản lý danh mục",
             icon: FileText,
         },
-        { path: "/admin/reports", label: "Báo cáo", icon: BarChart3 },
-        { path: "/admin/orders", label: "Đơn hàng", icon: ShoppingCart },
-        { path: "/admin/settings", label: "Cài đặt", icon: Settings },
+        {
+            path: "/admin/reviews",
+            label: "Quản lý đánh giá",
+            icon: MessageSquare,
+        },
+        //{ path: "/admin/reports", label: "Báo cáo", icon: BarChart3 },
     ];
 
     return (
@@ -34,7 +38,11 @@ const AdminLayout = () => {
             <aside className="w-64 bg-white shadow-lg flex flex-col">
                 <div className="p-6 border-b border-gray-200">
                     <div className="flex items-center space-x-3">
-                        <Shield className="w-8 h-8 text-blue-500" />
+                        <img
+                            src="/Logo.png"
+                            alt="Logo"
+                            className="h-10 w-10 rounded-full flex-shrink-0"
+                        />
                         <div>
                             <h1 className="text-xl font-bold text-gray-800">
                                 Admin Panel
@@ -58,7 +66,7 @@ const AdminLayout = () => {
                                         to={item.path}
                                         className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
                                             isActive
-                                                ? "bg-blue-500 text-white"
+                                                ? "bg-blue-500 text-white hover:text-white"
                                                 : "text-gray-700 hover:bg-gray-100 hover:text-blue-500"
                                         }`}
                                     >
