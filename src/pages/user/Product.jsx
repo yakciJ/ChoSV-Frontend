@@ -25,6 +25,8 @@ import {
     getPopularProducts,
     getSimilarProducts,
 } from "../../services/productService";
+import ReportMenu from "../../components/ReportMenu";
+import { REPORT_TYPES } from "../../services/reportService";
 
 export default function Product() {
     const { productId } = useParams();
@@ -119,7 +121,7 @@ export default function Product() {
             setShowLeftButton(container.scrollLeft > 3);
             setShowRightButton(
                 container.scrollLeft <
-                    container.scrollWidth - container.clientWidth - 2
+                    container.scrollWidth - container.clientWidth - 2,
             );
         }
     };
@@ -194,7 +196,7 @@ export default function Product() {
             const response = await getUserWallPosts(
                 userName,
                 pageIndex,
-                pageSize
+                pageSize,
             );
             setUserWallPosts(response.items || []);
         } catch (err) {
@@ -315,7 +317,7 @@ export default function Product() {
                                                     : "border-black"
                                             }`}
                                         />
-                                    )
+                                    ),
                                 )}
                             </div>
 
@@ -343,12 +345,24 @@ export default function Product() {
                                     </div>
                                 </h1>
                             </div>
-                            <Heart
-                                onClick={handleFavorite}
-                                className={`self-center  cursor-pointer ${
-                                    isFavorite ? "fill-red-500" : ""
-                                }`}
-                            />
+                            <div className="flex flex-col items-center gap-2">
+                                <ReportMenu
+                                    entityId={product?.productId}
+                                    entityType={REPORT_TYPES.PRODUCT}
+                                    onReportSuccess={() => {
+                                        // You can add any success handling here
+                                        console.log(
+                                            "Product reported successfully",
+                                        );
+                                    }}
+                                />
+                                <Heart
+                                    onClick={handleFavorite}
+                                    className={`cursor-pointer ${
+                                        isFavorite ? "fill-red-500" : ""
+                                    }`}
+                                />
+                            </div>
                         </div>
                         <div className="flex mt-2">
                             <Clock9 />
@@ -384,7 +398,7 @@ export default function Product() {
                                             product?.sellerName}
                                     </span>
                                 </div>
-                                <div className="ml-auto">
+                                <div className="ml-auto flex items-center gap-2">
                                     <button
                                         onClick={() =>
                                             toUserProfile(product?.sellerName)
@@ -469,7 +483,7 @@ export default function Product() {
                 title="Sản phẩm tương tự"
                 products={similarProducts}
                 viewAllLink={`/similar/${productId}?name=${encodeURIComponent(
-                    product?.productName || ""
+                    product?.productName || "",
                 )}`}
             />
             {recommendedProducts && (

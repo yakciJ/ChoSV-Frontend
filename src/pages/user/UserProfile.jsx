@@ -15,8 +15,11 @@ import { useDialog } from "../../hooks/useDialog";
 
 import ProductCarousel from "../../components/ProductCarousel";
 import ProfileEditModal from "../../components/ProfileEditModal";
+import ReportMenu from "../../components/ReportMenu";
+import ReportDialog from "../../components/ReportDialog";
 import { getUser } from "../../services/userService";
 import { getUserProducts } from "../../services/productService";
+import { REPORT_TYPES } from "../../services/reportService";
 import {
     createUserWallPost,
     deleteUserWallPost,
@@ -51,7 +54,7 @@ export default function UserProfile() {
     const { userName } = useParams();
 
     const { info: currentUser, isAuthenticated } = useSelector(
-        (state) => state.user
+        (state) => state.user,
     );
     const currentUserId = currentUser?.userId;
 
@@ -83,13 +86,14 @@ export default function UserProfile() {
     // Dropdown and modal states
     const [showDropdown, setShowDropdown] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
+    const [showReportDialog, setShowReportDialog] = useState(false);
 
     const listTopRef = useRef(null);
     const dropdownRef = useRef(null);
 
     // Once we have profile, we can compute ownership correctly
     const isOwnerProfile = Boolean(
-        currentUserId && profile?.userId && currentUserId === profile.userId
+        currentUserId && profile?.userId && currentUserId === profile.userId,
     );
 
     const name = displayName(profile);
@@ -172,7 +176,7 @@ export default function UserProfile() {
 
     const handleReport = () => {
         setShowDropdown(false);
-        showError("Tính năng báo cáo sẽ được triển khai sau.");
+        setShowReportDialog(true);
     };
 
     const handleEditProfile = () => {
@@ -415,7 +419,7 @@ export default function UserProfile() {
                                         <span>
                                             Tham gia:{" "}
                                             {formatDateLocal(
-                                                profile?.createdAt
+                                                profile?.createdAt,
                                             )}
                                         </span>
                                     </div>
@@ -561,7 +565,7 @@ export default function UserProfile() {
                                                             </p>
                                                             <p className="text-xs text-gray-500">
                                                                 {formatDateLocal(
-                                                                    post.createdAt
+                                                                    post.createdAt,
                                                                 )}
                                                             </p>
                                                         </div>
@@ -585,7 +589,7 @@ export default function UserProfile() {
                                                                         <button
                                                                             onClick={() =>
                                                                                 saveEdit(
-                                                                                    post
+                                                                                    post,
                                                                                 )
                                                                             }
                                                                             className="text-sm px-3 py-1 rounded-md bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50"
@@ -604,7 +608,7 @@ export default function UserProfile() {
                                                                         <button
                                                                             onClick={() =>
                                                                                 startEdit(
-                                                                                    post
+                                                                                    post,
                                                                                 )
                                                                             }
                                                                             className="text-sm px-3 py-1 rounded-md border hover:bg-gray-50"
@@ -614,7 +618,7 @@ export default function UserProfile() {
                                                                         <button
                                                                             onClick={() =>
                                                                                 removePost(
-                                                                                    post
+                                                                                    post,
                                                                                 )
                                                                             }
                                                                             className="text-sm px-3 py-1 rounded-md border border-red-200 text-red-600 hover:bg-red-50"
@@ -624,7 +628,24 @@ export default function UserProfile() {
                                                                     </>
                                                                 )}
                                                             </div>
-                                                        ) : null}
+                                                        ) : (
+                                                            /* Show report menu for posts that user cannot manage */
+                                                            isAuthenticated && (
+                                                                <ReportMenu
+                                                                    entityId={
+                                                                        post.userWallPostId
+                                                                    }
+                                                                    entityType={
+                                                                        REPORT_TYPES.COMMENT
+                                                                    }
+                                                                    onReportSuccess={() => {
+                                                                        console.log(
+                                                                            "Comment reported successfully",
+                                                                        );
+                                                                    }}
+                                                                />
+                                                            )
+                                                        )}
                                                     </div>
 
                                                     <div className="mt-3 text-gray-700 whitespace-pre-wrap">
@@ -637,7 +658,7 @@ export default function UserProfile() {
                                                                 onChange={(e) =>
                                                                     setEditingValue(
                                                                         e.target
-                                                                            .value
+                                                                            .value,
                                                                     )
                                                                 }
                                                                 rows={3}
@@ -707,6 +728,17 @@ export default function UserProfile() {
                     onClose={() => setShowEditModal(false)}
                     profile={profile}
                     onProfileUpdate={handleProfileUpdate}
+                />
+
+                {/* Report Dialog */}
+                <ReportDialog
+                    isOpen={showReportDialog}
+                    onClose={() => setShowReportDialog(false)}
+                    entityId={profile?.userId}
+                    entityType={REPORT_TYPES.USER}
+                    onReportSuccess={() => {
+                        console.log("User reported successfully");
+                    }}
                 />
             </div>
         </div>
