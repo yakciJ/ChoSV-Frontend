@@ -15,7 +15,7 @@ export const getNewestProducts = async (page = 1, pageSize = 12) => {
 export const getPopularProducts = async (
     page = 1,
     pageSize = 12,
-    daysBack = 30
+    daysBack = 100
 ) => {
     const response = await axiosInstance.get(url + `popular`, {
         params: {

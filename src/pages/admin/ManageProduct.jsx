@@ -257,7 +257,7 @@ const ManageProduct = () => {
                             placeholder="Tìm kiếm theo tên sản phẩm, người bán, mô tả..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            className="w-full pl-10 bg-white text-black pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         />
                     </div>
                     <select
@@ -266,7 +266,7 @@ const ManageProduct = () => {
                             setStatusFilter(e.target.value);
                             setCurrentPage(1); // Reset to first page when filtering
                         }}
-                        className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="px-3 py-2 border border-gray-300 bg-white text-black rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     >
                         {statusOptions.map((option) => (
                             <option key={option.value} value={option.value}>
@@ -280,7 +280,7 @@ const ManageProduct = () => {
                             setPageSize(Number(e.target.value));
                             setCurrentPage(1);
                         }}
-                        className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="px-3 py-2 border border-gray-300 text-black bg-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     >
                         <option value={10}>10 / trang</option>
                         <option value={25}>25 / trang</option>

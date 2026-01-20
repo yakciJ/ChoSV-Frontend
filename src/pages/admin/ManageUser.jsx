@@ -187,7 +187,7 @@ const ManageUser = () => {
                             placeholder="Tìm kiếm theo tên, email, username..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            className="w-full bg-white text-black pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         />
                     </div>
                     <select
@@ -196,7 +196,7 @@ const ManageUser = () => {
                             setPageSize(Number(e.target.value));
                             setCurrentPage(1); // Reset to first page when changing page size
                         }}
-                        className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="px-3 py-2 bg-white text-black border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     >
                         <option value={10}>10 / trang</option>
                         <option value={25}>25 / trang</option>

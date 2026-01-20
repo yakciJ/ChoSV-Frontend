@@ -169,11 +169,11 @@ export default function UserLayout() {
                                     e.stopPropagation();
                                     toggleCategoryExpand(category.categoryId);
                                 }}
-                                className="p-1 hover:bg-gray-200 rounded"
+                                className="p-1 bg-white rounded"
                             >
                                 <ChevronRight
                                     size={16}
-                                    className={`text-gray-500 transition-transform ${
+                                    className={`text-gray-500 bg-white transition-transform ${
                                         isExpanded ? "rotate-90" : ""
                                     }`}
                                 />
@@ -214,9 +214,9 @@ export default function UserLayout() {
                     </h2>
                     <button
                         onClick={closeSidebar}
-                        className="p-1 hover:bg-gray-100 rounded-full"
+                        className="p-1 hover:bg-gray-100 bg-white rounded-full"
                     >
-                        <X size={20} className="text-gray-600" />
+                        <X size={20} className="text-gray-600 bg-white" />
                     </button>
                 </div>
 
@@ -225,7 +225,7 @@ export default function UserLayout() {
                     {categories.length > 0 ? (
                         renderCategoryTree(categories)
                     ) : (
-                        <div className="p-4 text-center text-gray-500">
+                        <div className="p-4 text-center bg-white text-gray-500">
                             Đang tải danh mục...
                         </div>
                     )}
