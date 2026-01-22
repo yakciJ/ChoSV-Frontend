@@ -10,6 +10,7 @@ import {
     Shield,
     FileText,
     MessageSquare,
+    AlertTriangle,
 } from "lucide-react";
 
 const AdminLayout = () => {
@@ -29,7 +30,11 @@ const AdminLayout = () => {
             label: "Quản lý đánh giá",
             icon: MessageSquare,
         },
-        //{ path: "/admin/reports", label: "Báo cáo", icon: BarChart3 },
+        {
+            path: "/admin/reports",
+            label: "Quản lý báo cáo",
+            icon: AlertTriangle,
+        },
     ];
 
     return (
