@@ -22,6 +22,8 @@ import { initializeAuth, logoutUser } from "../../store/userSlice";
 import { fetchAllCategories } from "../../store/categorySlice";
 import { useNavigate } from "react-router-dom";
 import { useRef } from "react";
+import { useNotifications } from "../../hooks/useNotifications";
+import NotificationDropdown from "../../components/NotificationDropdown";
 
 export default function UserLayout() {
     const [query, setQuery] = useState("");
@@ -31,8 +33,13 @@ export default function UserLayout() {
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [expandedCategories, setExpandedCategories] = useState({});
+    const [isNotificationOpen, setIsNotificationOpen] = useState(false);
     const dropdownRef = useRef(null);
     const sidebarRef = useRef(null);
+    const notificationRef = useRef(null);
+
+    // Use notifications hook
+    const { unreadCount, handleMarkAllAsRead } = useNotifications();
 
     const navigate = useNavigate();
 
@@ -73,11 +80,24 @@ export default function UserLayout() {
         }));
     };
 
+    const toggleNotification = () => {
+        if (!isNotificationOpen) {
+            // When opening the dropdown, immediately reset the unread count
+            handleMarkAllAsRead();
+        }
+        setIsNotificationOpen(!isNotificationOpen);
+    };
+
+    const closeNotification = () => {
+        setIsNotificationOpen(false);
+    };
+
     const handleLogout = async () => {
         localStorage.clear();
         dispatch({ type: "RESET_STORE" });
         await dispatch(logoutUser());
         setIsDropdownOpen(false);
+        setIsNotificationOpen(false);
         navigate("/");
     };
 
@@ -109,6 +129,13 @@ export default function UserLayout() {
                 !event.target.closest("[data-sidebar-toggle]")
             ) {
                 setIsSidebarOpen(false);
+            }
+            if (
+                notificationRef.current &&
+                !notificationRef.current.contains(event.target) &&
+                !event.target.closest("[data-notification-toggle]")
+            ) {
+                setIsNotificationOpen(false);
             }
         };
 
@@ -296,10 +323,27 @@ export default function UserLayout() {
                                 size={24}
                             />
                         </Link>
-                        <Bell
-                            className="text-gray-600 hover:text-yellow-500 cursor-pointer"
-                            size={24}
-                        />
+                        <div className="relative" ref={notificationRef}>
+                            <button
+                                data-notification-toggle
+                                onClick={toggleNotification}
+                                className="relative p-1 rounded-full hover:bg-gray-100 transition-colors"
+                            >
+                                <Bell
+                                    className="text-gray-600 hover:text-yellow-500 cursor-pointer"
+                                    size={24}
+                                />
+                                {unreadCount > 0 && (
+                                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium">
+                                        {unreadCount > 99 ? "99+" : unreadCount}
+                                    </span>
+                                )}
+                            </button>
+                            <NotificationDropdown
+                                isOpen={isNotificationOpen}
+                                onClose={closeNotification}
+                            />
+                        </div>
                         <Link
                             to="/product-management"
                             className="px-4 py-2 bg-gray-100 text-gray-800 rounded-3xl hover:bg-gray-200 transition whitespace-nowrap"

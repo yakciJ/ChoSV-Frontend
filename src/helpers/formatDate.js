@@ -8,3 +8,11 @@ export function formatDateLocal(isoString) {
         year: "numeric",
     });
 }
+
+export function formatDate(isoString) {
+    return new Date(isoString).toLocaleDateString("vi-VN", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+    });
+}

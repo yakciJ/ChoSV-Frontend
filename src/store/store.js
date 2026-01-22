@@ -1,10 +1,12 @@
 import { combineReducers, configureStore } from "@reduxjs/toolkit";
 import userReducer from "./userSlice";
 import categoryReducer from "./categorySlice";
+import notificationReducer from "./notificationSlice";
 
 const appReducer = combineReducers({
     user: userReducer,
     categories: categoryReducer,
+    notifications: notificationReducer,
     // Add more reducers here as your app grows
 });
 

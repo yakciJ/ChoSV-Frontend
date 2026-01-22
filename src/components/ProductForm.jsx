@@ -44,7 +44,6 @@ export default function ProductForm({ mode, productId }) {
     const fetchCategories = async () => {
         try {
             const data = await getAllCategories();
-            console.log("Fetched categories:", data);
             setCategories(data);
         } catch (error) {
             console.error("Error fetching categories:", error);
@@ -55,7 +54,6 @@ export default function ProductForm({ mode, productId }) {
         setLoading(true);
         try {
             const product = await getProduct(productId);
-            console.log("Product data:", product);
             setFormData({
                 productName: product.productName,
                 productDescription: product.productDescription,

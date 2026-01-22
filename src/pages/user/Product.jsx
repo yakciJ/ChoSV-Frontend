@@ -108,7 +108,6 @@ export default function Product() {
     const fetchSimilarProducts = async (productId) => {
         try {
             const response = await getSimilarProducts(productId, 1, 12);
-            console.log("Similar products fetched", response);
             setSimilarProducts(response.items || []);
         } catch (err) {
             console.error("Error fetching similar products:", err);
@@ -209,7 +208,6 @@ export default function Product() {
         fetchNewestProducts();
         fetchPopularProducts();
         fetchSimilarProducts(productId);
-        console.log("Similar products fetched", similarProducts);
         window.scrollTo({
             top: 0,
             left: 0,
