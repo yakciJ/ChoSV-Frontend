@@ -12,6 +12,7 @@ import {
     MapPin,
     Calendar,
     AlertTriangle,
+    GraduationCap,
 } from "lucide-react";
 import { getAllUsers, banUser, deleteUser } from "../../services/userService";
 import { useDialog } from "../../hooks/useDialog";
@@ -75,8 +76,8 @@ const ManageUser = () => {
                     users.map((user) =>
                         user.userId === userId
                             ? { ...user, isBanned: !isBanned }
-                            : user
-                    )
+                            : user,
+                    ),
                 );
 
                 const successMessage =
@@ -218,6 +219,9 @@ const ManageUser = () => {
                                     Thông tin liên hệ
                                 </th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Trường đại học
+                                </th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     Trạng thái
                                 </th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -232,7 +236,7 @@ const ManageUser = () => {
                             {filteredUsers.length === 0 ? (
                                 <tr>
                                     <td
-                                        colSpan="5"
+                                        colSpan="6"
                                         className="px-6 py-12 text-center text-gray-500"
                                     >
                                         {searchQuery
@@ -268,9 +272,9 @@ const ManageUser = () => {
                                                                             user.userName
                                                                         )
                                                                             .charAt(
-                                                                                0
+                                                                                0,
                                                                             )
-                                                                            .toUpperCase()
+                                                                            .toUpperCase(),
                                                                     );
                                                             }}
                                                         />
@@ -324,6 +328,15 @@ const ManageUser = () => {
                                             </div>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
+                                            <div className="flex items-center text-sm text-gray-600">
+                                                <GraduationCap className="w-4 h-4 mr-2" />
+                                                <span className="truncate">
+                                                    {user.universityName ||
+                                                        "Chưa cập nhật"}
+                                                </span>
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
                                             <div className="space-y-2">
                                                 <div className="flex items-center">
                                                     {user.isBanned ? (
@@ -371,7 +384,7 @@ const ManageUser = () => {
                                                     onClick={() =>
                                                         handleBanUser(
                                                             user.userId,
-                                                            user.isBanned
+                                                            user.isBanned,
                                                         )
                                                     }
                                                     className={`inline-flex items-center px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
@@ -395,7 +408,7 @@ const ManageUser = () => {
                                                 <button
                                                     onClick={() =>
                                                         handleDeleteUser(
-                                                            user.userId
+                                                            user.userId,
                                                         )
                                                     }
                                                     className="inline-flex items-center px-3 py-1.5 rounded-md text-xs font-medium bg-red-100 text-red-700 hover:bg-red-200 transition-colors"
@@ -437,7 +450,7 @@ const ManageUser = () => {
                             <div className="flex gap-1">
                                 {Array.from(
                                     { length: totalPages },
-                                    (_, i) => i + 1
+                                    (_, i) => i + 1,
                                 ).map((page) => (
                                     <button
                                         key={page}

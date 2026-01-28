@@ -4,6 +4,7 @@ import AdminLayout from "../pages/admin/AdminLayout.jsx";
 import AdminDashboard from "../pages/admin/AdminDashboard.jsx";
 import ManageUser from "../pages/admin/ManageUser.jsx";
 import ManageCategory from "../pages/admin/ManageCategory.jsx";
+import ManageUniversity from "../pages/admin/ManageUniversity.jsx";
 import ManageReview from "../pages/admin/ManageReview.jsx";
 import ManageReport from "../pages/admin/ManageReport.jsx";
 import Home from "../pages/user/Home.jsx";
@@ -58,6 +59,7 @@ export const router = createBrowserRouter([
             { path: "users", element: <ManageUser /> },
             { path: "products", element: <ManageProduct /> },
             { path: "categories", element: <ManageCategory /> },
+            { path: "universities", element: <ManageUniversity /> },
             { path: "reviews", element: <ManageReview /> },
             { path: "reports", element: <ManageReport /> },
             { path: "orders", element: <div>Order Management</div> },

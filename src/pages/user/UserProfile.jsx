@@ -9,6 +9,7 @@ import {
     MoreVertical,
     Flag,
     Edit,
+    GraduationCap,
 } from "lucide-react";
 import { formatDateLocal } from "../../helpers/formatDate";
 import { useDialog } from "../../hooks/useDialog";
@@ -411,6 +412,13 @@ export default function UserProfile() {
                                         <MapPin size={16} />
                                         <span className="truncate">
                                             {profile?.address || "—"}
+                                        </span>
+                                    </div>
+
+                                    <div className="flex justify-center sm:justify-start items-center gap-2 text-white/90">
+                                        <GraduationCap size={16} />
+                                        <span className="truncate">
+                                            {profile?.universityName || "—"}
                                         </span>
                                     </div>
 

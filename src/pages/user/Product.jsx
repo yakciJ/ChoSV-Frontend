@@ -12,6 +12,7 @@ import {
     Phone,
     User,
     MapPin,
+    GraduationCap,
 } from "lucide-react";
 import { useErrorHandler } from "../../hooks/ErrorHandler";
 import ErrorDisplay from "../../components/Error";
@@ -423,6 +424,13 @@ export default function Product() {
                                 <MapPin />
                                 <p className="ml-4 text-gray-900">
                                     {product?.sellerAddress ?? "Chưa cập nhật"}
+                                </p>
+                            </div>
+                            <div className="mt-4 flex items-center">
+                                <GraduationCap />
+                                <p className="ml-4 text-gray-900">
+                                    {product?.sellerUniversity ??
+                                        "Chưa cập nhật"}
                                 </p>
                             </div>
                         </div>

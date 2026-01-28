@@ -1,7 +1,8 @@
-import { useState } from "react";
-import { X, Upload, Camera } from "lucide-react";
+import { useState, useEffect } from "react";
+import { X, Upload, Camera, GraduationCap } from "lucide-react";
 import { updateUser, updateUserAvatar } from "../services/userService";
 import { uploadImage } from "../services/imageService";
+import { getAllUniversities } from "../services/universityService";
 import { useDialog } from "../hooks/useDialog";
 
 const ProfileEditModal = ({ isOpen, onClose, profile, onProfileUpdate }) => {
@@ -10,11 +11,42 @@ const ProfileEditModal = ({ isOpen, onClose, profile, onProfileUpdate }) => {
         bio: profile?.bio || "",
         address: profile?.address || "",
         phoneNumber: profile?.phoneNumber || "",
+        universityId: profile?.universityId || null,
     });
+    const [universities, setUniversities] = useState([]);
+    const [universitiesLoading, setUniversitiesLoading] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
 
     const { showSuccess, showError } = useDialog();
+
+    useEffect(() => {
+        if (isOpen) {
+            fetchUniversities();
+            // Reset form data when modal opens
+            setFormData({
+                fullName: profile?.fullName || "",
+                bio: profile?.bio || "",
+                address: profile?.address || "",
+                phoneNumber: profile?.phoneNumber || "",
+                universityId: profile?.universityId || null,
+            });
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isOpen, profile]);
+
+    const fetchUniversities = async () => {
+        setUniversitiesLoading(true);
+        try {
+            const response = await getAllUniversities(1, 100); // Get all universities
+            setUniversities(response.items || []);
+        } catch (error) {
+            console.error("Error fetching universities:", error);
+            showError("Không thể tải danh sách trường đại học.");
+        } finally {
+            setUniversitiesLoading(false);
+        }
+    };
 
     if (!isOpen) return null;
 
@@ -22,7 +54,12 @@ const ProfileEditModal = ({ isOpen, onClose, profile, onProfileUpdate }) => {
         const { name, value } = e.target;
         setFormData((prev) => ({
             ...prev,
-            [name]: value,
+            [name]:
+                name === "universityId"
+                    ? value
+                        ? parseInt(value)
+                        : null
+                    : value,
         }));
     };
 
@@ -50,7 +87,7 @@ const ProfileEditModal = ({ isOpen, onClose, profile, onProfileUpdate }) => {
             console.error("Error uploading image:", error);
             showError(
                 "Có lỗi xảy ra khi upload ảnh: " +
-                    (error.message || "Lỗi không xác định")
+                    (error.message || "Lỗi không xác định"),
             );
         } finally {
             setIsUploadingAvatar(false);
@@ -192,6 +229,43 @@ const ProfileEditModal = ({ isOpen, onClose, profile, onProfileUpdate }) => {
                                 placeholder="Nhập địa chỉ"
                                 disabled={isSubmitting || isUploadingAvatar}
                             />
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Trường đại học
+                            </label>
+                            <div className="relative">
+                                <GraduationCap className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                                <select
+                                    name="universityId"
+                                    value={formData.universityId || ""}
+                                    onChange={handleInputChange}
+                                    className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none bg-white"
+                                    disabled={
+                                        isSubmitting ||
+                                        isUploadingAvatar ||
+                                        universitiesLoading
+                                    }
+                                >
+                                    <option value="">
+                                        Chọn trường đại học
+                                    </option>
+                                    {universities.map((university) => (
+                                        <option
+                                            key={university.universityId}
+                                            value={university.universityId}
+                                        >
+                                            {university.universityName}
+                                        </option>
+                                    ))}
+                                </select>
+                                {universitiesLoading && (
+                                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
+                                    </div>
+                                )}
+                            </div>
                         </div>
 
                         <div>

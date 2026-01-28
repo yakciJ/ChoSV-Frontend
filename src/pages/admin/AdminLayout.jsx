@@ -11,6 +11,7 @@ import {
     FileText,
     MessageSquare,
     AlertTriangle,
+    GraduationCap,
 } from "lucide-react";
 
 const AdminLayout = () => {
@@ -24,6 +25,11 @@ const AdminLayout = () => {
             path: "/admin/categories",
             label: "Quản lý danh mục",
             icon: FileText,
+        },
+        {
+            path: "/admin/universities",
+            label: "Quản lý trường đại học",
+            icon: GraduationCap,
         },
         {
             path: "/admin/reviews",
