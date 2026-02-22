@@ -309,7 +309,7 @@ export default function UserLayout() {
                         <Search size={14} />
                     </button>
                 </form>
-                <div className="flex items-center gap-4 ml-2 md:ml-0">
+                <div className="flex items-center gap-4 ml-2 md:ml-2">
                     <div className="hidden md:flex flex-col md:flex-row md:items-center md:gap-4 lg:gap-6">
                         <Link to="/favorites">
                             <Heart
@@ -327,7 +327,7 @@ export default function UserLayout() {
                             <button
                                 data-notification-toggle
                                 onClick={toggleNotification}
-                                className="relative p-1 rounded-full hover:bg-gray-100 transition-colors"
+                                className="relative p-1 rounded-full bg-white hover:bg-gray-100 transition-colors"
                             >
                                 <Bell
                                     className="text-gray-600 hover:text-yellow-500 cursor-pointer"
