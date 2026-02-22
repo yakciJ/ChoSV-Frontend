@@ -39,6 +39,7 @@ export default function Product() {
     const [showRightButton, setShowRightButton] = useState(false);
     const thumbnailContainerRef = useRef(null);
     const [userWallPosts, setUserWallPosts] = useState([]);
+    const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
 
     const [newestProducts, setNewestProducts] = useState([]);
     const [popularProducts, setPopularProducts] = useState([]);
@@ -185,6 +186,7 @@ export default function Product() {
             const response = await getProduct(productId);
             setIsFavorite(response.isFavorite);
             setProduct(response);
+            console.log("Product details:", response);
         } catch (err) {
             handleError(err);
             setProduct(null);
@@ -349,7 +351,6 @@ export default function Product() {
                                     entityId={product?.productId}
                                     entityType={REPORT_TYPES.PRODUCT}
                                     onReportSuccess={() => {
-                                        // You can add any success handling here
                                         console.log(
                                             "Product reported successfully",
                                         );
@@ -411,25 +412,25 @@ export default function Product() {
                             <div className="mt-4 flex items-center">
                                 <Mail />
                                 <p className="ml-4 text-gray-900">
-                                    {product?.sellerEmail ?? "Chưa cập nhật"}
+                                    {product?.sellerEmail || "Chưa cập nhật"}
                                 </p>
                             </div>
                             <div className="mt-4 flex items-center">
                                 <Phone />
                                 <p className="ml-4 text-gray-900">
-                                    {product?.sellerPhone ?? "Chưa cập nhật"}
+                                    {product?.sellerPhone || "Chưa cập nhật"}
                                 </p>
                             </div>
                             <div className="mt-4 flex items-center">
                                 <MapPin />
                                 <p className="ml-4 text-gray-900">
-                                    {product?.sellerAddress ?? "Chưa cập nhật"}
+                                    {product?.sellerAddress || "Chưa cập nhật"}
                                 </p>
                             </div>
                             <div className="mt-4 flex items-center">
                                 <GraduationCap />
                                 <p className="ml-4 text-gray-900">
-                                    {product?.sellerUniversity ??
+                                    {product?.sellerUniversity ||
                                         "Chưa cập nhật"}
                                 </p>
                             </div>
@@ -455,11 +456,58 @@ export default function Product() {
                     <h2 className="text-2xl font-semibold mb-2 border-b border-gray-300">
                         Mô tả chi tiết
                     </h2>
-                    <p className="text-gray-800 whitespace-pre-line">
-                        {product?.productDescription}
-                    </p>
+                    <div className="text-gray-800 whitespace-pre-line">
+                        {(() => {
+                            const description =
+                                product?.productDescription || "";
+                            const maxLines = 6;
+                            const lines = description.split("\n");
+
+                            if (lines.length <= maxLines) {
+                                return description;
+                            }
+
+                            if (isDescriptionExpanded) {
+                                return (
+                                    <>
+                                        {description}
+                                        <div className="text-center mt-2">
+                                            <button
+                                                onClick={() =>
+                                                    setIsDescriptionExpanded(
+                                                        false,
+                                                    )
+                                                }
+                                                className="text-blue-500 bg-transparent border-none hover:text-blue-700 hover:underline font-medium"
+                                            >
+                                                Thu gọn
+                                            </button>
+                                        </div>
+                                    </>
+                                );
+                            } else {
+                                return (
+                                    <>
+                                        {lines.slice(0, maxLines).join("\n")}...
+                                        <div className="text-center mt-2">
+                                            <button
+                                                onClick={() =>
+                                                    setIsDescriptionExpanded(
+                                                        true,
+                                                    )
+                                                }
+                                                className="text-blue-500 bg-transparent border-none hover:text-blue-700 hover:underline font-medium"
+                                            >
+                                                Xem thêm
+                                            </button>
+                                        </div>
+                                    </>
+                                );
+                            }
+                        })()}
+                    </div>
                 </div>
-                <div className="flex-1 basis-1/2 bg-white rounded-md p-6 pb-4">
+                <div className="flex-1 basis-1/2 bg-white rounded-md p-6 pb-4 h-72 flex flex-col">
                     <div className="flex border-b border-gray-300">
                         <h2 className="text-2xl font-semibold">Đánh giá</h2>
                         <Link
@@ -470,7 +518,7 @@ export default function Product() {
                             <ChevronLeft className="rotate-180 self-center" />
                         </Link>
                     </div>
-                    <div className="mt-4">
+                    <div className="mt-4 flex-1 overflow-y-auto">
                         {userWallPosts.length === 0 ? (
                             <p className="text-gray-600">
                                 Chưa có đánh giá nào.

@@ -161,7 +161,7 @@ export default function UserProfile() {
             setTotalCount(res?.totalCount || 0);
         } catch (e) {
             console.error(e);
-            setPostsError("Không thể tải bình luận.");
+            setPostsError("Không thể tải đánh giá.");
             setPosts([]);
             setTotalCount(0);
         } finally {
@@ -224,7 +224,7 @@ export default function UserProfile() {
             });
         } catch (e) {
             console.error(e);
-            showError("Không thể đăng bình luận.");
+            showError("Không thể đăng đánh giá.");
         } finally {
             setSubmitting(false);
         }
@@ -256,7 +256,7 @@ export default function UserProfile() {
             await fetchWallPosts();
         } catch (e) {
             console.error(e);
-            showError("Không thể cập nhật bình luận.");
+            showError("Không thể cập nhật đánh giá.");
         } finally {
             setSavingEdit(false);
         }
@@ -264,8 +264,8 @@ export default function UserProfile() {
 
     const removePost = async (post) => {
         try {
-            await confirm("Xóa bình luận này?", {
-                title: "Xóa bình luận",
+            await confirm("Xóa đánh giá này?", {
+                title: "Xóa đánh giá",
                 confirmText: "Xóa",
                 type: "warning",
             });
@@ -284,7 +284,7 @@ export default function UserProfile() {
             if (error !== false) {
                 // false means user cancelled, don't show error
                 console.error(error);
-                showError("Không thể xóa bình luận.");
+                showError("Không thể xóa đánh giá.");
             }
         }
     };
@@ -465,11 +465,11 @@ export default function UserProfile() {
                 <div className="mt-10">
                     <div className="flex items-center justify-between mb-3">
                         <h2 className="text-xl font-bold text-blue-500">
-                            Bình luận
+                            Đánh giá
                         </h2>
                         {totalCount > 0 ? (
                             <span className="text-sm text-gray-500">
-                                {totalCount} bình luận
+                                {totalCount} đánh giá
                             </span>
                         ) : null}
                     </div>
@@ -484,7 +484,7 @@ export default function UserProfile() {
                                         setNewContent(e.target.value)
                                     }
                                     rows={3}
-                                    placeholder="Viết bình luận lên tường..."
+                                    placeholder="Viết đánh giá lên tường..."
                                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
                                 />
                                 <div className="flex items-center justify-end mt-3 gap-2">
@@ -510,7 +510,7 @@ export default function UserProfile() {
                             </>
                         ) : (
                             <div className="text-gray-600 flex items-center justify-between flex-col sm:flex-row gap-3">
-                                <span>Bạn cần đăng nhập để bình luận.</span>
+                                <span>Bạn cần đăng nhập để đánh giá.</span>
                                 <Link
                                     to="/login"
                                     className="text-blue-500 hover:underline"
@@ -684,7 +684,7 @@ export default function UserProfile() {
                             </div>
                         ) : (
                             <div className="py-8 text-center text-gray-500">
-                                Chưa có bình luận nào.
+                                Chưa có đánh giá nào.
                             </div>
                         )}
                     </div>

@@ -23,13 +23,15 @@ export const updateUser = async (userData) => {
 
 export const updateUserAvatar = async (imageUrl) => {
     const response = await axiosInstance.put(
-        url + `avatar?imageUrl=${encodeURIComponent(imageUrl)}`
+        url + `avatar?imageUrl=${encodeURIComponent(imageUrl)}`,
     );
     return response;
 };
 
-export const getAllUsers = async () => {
-    const response = await axiosInstance.get(url + `admin/users`);
+export const getAllUsers = async (page = 1, pageSize = 10) => {
+    const response = await axiosInstance.get(url + `admin/users`, {
+        params: { page, pageSize },
+    });
     return response;
 };
 

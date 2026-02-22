@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { fetchAllCategories } from "../../store/categorySlice";
 import { getProductsByCategoryId } from "../../services/categoryService";
@@ -8,10 +8,9 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 
 export default function Category() {
     const { categoryId } = useParams();
-    const navigate = useNavigate();
     const dispatch = useDispatch();
     const { data: categories, loading: categoriesLoading } = useSelector(
-        (state) => state.categories
+        (state) => state.categories,
     );
 
     const [products, setProducts] = useState([]);
@@ -63,7 +62,8 @@ export default function Category() {
                                 cat.childs &&
                                 cat.childs.some(
                                     (child) =>
-                                        child.categoryId === category.categoryId
+                                        child.categoryId ===
+                                        category.categoryId,
                                 )
                             ) {
                                 return cat;
@@ -105,7 +105,7 @@ export default function Category() {
             const response = await getProductsByCategoryId(
                 parseInt(categoryId),
                 currentPage,
-                pageSize
+                pageSize,
             );
 
             // Since axios instance returns response.data directly
@@ -171,7 +171,7 @@ export default function Category() {
                             <img
                                 src={category.imageUrl}
                                 alt={category.name}
-                                className="w-16 h-16 object-cover rounded-lg mx-auto"
+                                className="w-16 h-16 object-contain rounded-lg mx-auto"
                                 onError={(e) => {
                                     e.target.src = "/placeholder-image.jpg";
                                 }}
@@ -267,7 +267,7 @@ export default function Category() {
                                                 {pageNum}
                                             </button>
                                         );
-                                    }
+                                    },
                                 )}
                             </div>
 

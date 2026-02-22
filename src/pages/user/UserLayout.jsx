@@ -184,7 +184,7 @@ export default function UserLayout() {
                                 <img
                                     src={category.imageUrl}
                                     alt={category.name}
-                                    className="w-6 h-6 object-cover rounded"
+                                    className="w-6 h-6 object-contain rounded"
                                 />
                             )}
                             <span className="text-sm">{category.name}</span>
@@ -386,7 +386,7 @@ export default function UserLayout() {
                                 <span className="text-white">Đăng nhập</span>
                             </button>
                         )}
-                        {isDropdownOpen && (
+                        {isDropdownOpen && isAuthenticated && user && (
                             <div className="absolute right-0 mt-4 w-52 bg-white border border-gray-200 rounded-md shadow-lg py-2 z-50">
                                 <Link
                                     to={`profile/${user.userName}`}
