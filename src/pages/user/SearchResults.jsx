@@ -297,7 +297,7 @@ export default function SearchResults() {
                             <Filter size={16} />
                             Bộ lọc
                         </button>
-                        <div className="flex items-center gap-2 ml-auto">
+                        {/* <div className="flex items-center gap-2 ml-auto">
                             <span className="text-sm text-gray-600">
                                 Sắp xếp:
                             </span>
@@ -320,7 +320,7 @@ export default function SearchResults() {
                                 </select>
                                 <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
                             </div>
-                        </div>
+                        </div> */}
                     </div>
 
                     {/* Products Grid - Use the new SearchProductGrid */}

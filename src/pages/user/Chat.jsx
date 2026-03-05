@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { MessageCircle, Send, Menu, X } from "lucide-react";
 import {
     getChatHistory,
@@ -34,7 +34,15 @@ const Chat = () => {
     }, [selectedChat]);
 
     const scrollToBottom = () => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+        if (messagesEndRef.current) {
+            const container = messagesEndRef.current.parentElement;
+            if (container) {
+                container.scrollTo({
+                    top: container.scrollHeight,
+                    behavior: "smooth",
+                });
+            }
+        }
     };
 
     const loadRecentChats = async () => {
@@ -65,46 +73,63 @@ const Chat = () => {
         }
     };
 
-    const selectChatByUserName = async (userName) => {
-        try {
-            setLoading(true);
-            const userInfo = await getUser(userName);
+    const selectChatByUserName = useCallback(
+        async (userName) => {
+            try {
+                setLoading(true);
+                const userInfo = await getUser(userName);
 
-            const chatData = {
-                otherUserId: userInfo.userId,
-                otherUserName: userInfo.userName,
-                otherUserFullName: userInfo.fullName,
-                otherUserAvatar: userInfo.avatarImage,
-            };
-
-            setSelectedChat(chatData);
-            setIsSidebarOpen(false);
-
-            // Update URL to reflect the selected chat
-            navigate(`/chat/${userName}`, { replace: true });
-
-            // Load chat history
-            await loadChatHistory(userInfo.userId);
-
-            // Mark unread messages as read
-            const unreadMessages =
-                chatHistory[userInfo.userId]?.filter(
-                    (msg) => !msg.isRead && msg.senderId !== currentUserId
-                ) || [];
-
-            for (const message of unreadMessages) {
-                try {
-                    await markAsRead(message.messageId);
-                } catch (error) {
-                    console.error("Failed to mark message as read:", error);
+                if (!userInfo || !userInfo.userId) {
+                    console.error("Invalid user info received:", userInfo);
+                    return;
                 }
+
+                const chatData = {
+                    otherUserId: userInfo.userId,
+                    otherUserName: userInfo.userName || userName,
+                    otherUserFullName:
+                        userInfo.fullName || userInfo.userName || userName,
+                    otherUserAvatar: userInfo.avatarImage || null,
+                };
+
+                setSelectedChat(chatData);
+                setIsSidebarOpen(false);
+
+                // Update URL to reflect the selected chat
+                navigate(`/chat/${userName}`, { replace: true });
+
+                // Load chat history
+                await loadChatHistory(userInfo.userId);
+
+                // Mark unread messages as read after loading chat history
+                setChatHistory((prevHistory) => {
+                    const unreadMessages =
+                        prevHistory[userInfo.userId]?.filter(
+                            (msg) =>
+                                !msg.isRead && msg.senderId !== currentUserId,
+                        ) || [];
+
+                    unreadMessages.forEach(async (message) => {
+                        try {
+                            await markAsRead(message.messageId);
+                        } catch (error) {
+                            console.error(
+                                "Failed to mark message as read:",
+                                error,
+                            );
+                        }
+                    });
+
+                    return prevHistory;
+                });
+            } catch (error) {
+                console.error("Error fetching user info:", error);
+            } finally {
+                setLoading(false);
             }
-        } catch (error) {
-            console.error("Error fetching user info:", error);
-        } finally {
-            setLoading(false);
-        }
-    };
+        },
+        [navigate, currentUserId],
+    );
 
     const updateRecentChatsWithNewMessage = async (message) => {
         const otherUserId =
@@ -130,7 +155,7 @@ const Chat = () => {
 
         setRecentChats((prev) => {
             const existingChatIndex = prev.findIndex(
-                (chat) => chat.otherUserId === otherUserId
+                (chat) => chat.otherUserId === otherUserId,
             );
 
             if (existingChatIndex >= 0) {
@@ -143,7 +168,8 @@ const Chat = () => {
                     // Update user info if we have it
                     ...(otherUserInfo && {
                         otherUserName: otherUserInfo.userName,
-                        otherUserFullName: otherUserInfo.fullName,
+                        otherUserFullName:
+                            otherUserInfo.fullName || otherUserInfo.userName,
                         otherUserAvatar: otherUserInfo.avatarImage,
                     }),
                 };
@@ -151,6 +177,11 @@ const Chat = () => {
                 const [updatedChat] = updatedChats.splice(existingChatIndex, 1);
                 return [updatedChat, ...updatedChats];
             } else {
+                const fallbackUserName =
+                    message.senderId === currentUserId
+                        ? message.receiverUserName
+                        : message.senderUserName;
+
                 const newChat = {
                     messageId: message.messageId,
                     senderId: message.senderId,
@@ -161,12 +192,13 @@ const Chat = () => {
                     otherUserId: otherUserId,
                     otherUserName:
                         otherUserInfo?.userName ||
-                        (message.senderId === currentUserId
-                            ? message.receiverUserName
-                            : message.senderUserName) ||
+                        fallbackUserName ||
                         "unknown",
                     otherUserFullName:
-                        otherUserInfo?.fullName || "Unknown User",
+                        otherUserInfo?.fullName ||
+                        otherUserInfo?.userName ||
+                        fallbackUserName ||
+                        "Unknown User",
                     otherUserAvatar: otherUserInfo?.avatarImage || null,
                 };
 
@@ -185,7 +217,7 @@ const Chat = () => {
         if (routeUserName && currentUserId) {
             selectChatByUserName(routeUserName);
         }
-    }, [routeUserName, currentUserId]);
+    }, [routeUserName, currentUserId, selectChatByUserName]);
 
     // Subscribe to realtime events (NO SignalR .on here)
     useEffect(() => {
@@ -205,7 +237,7 @@ const Chat = () => {
                 if (selectedChatIdRef.current === message.senderId) {
                     setTimeout(scrollToBottom, 100);
                 }
-            }
+            },
         );
 
         const unsubSent = chatSignalR.subscribe("MessageSent", (message) => {
@@ -230,35 +262,35 @@ const Chat = () => {
                         updated[userId] = updated[userId].map((msg) =>
                             msg.messageId === data.messageId
                                 ? { ...msg, isRead: true }
-                                : msg
+                                : msg,
                         );
                     });
                     return updated;
                 });
-            }
+            },
         );
 
         const unsubOnlineUsers = chatSignalR.subscribe(
             "OnlineUsers",
             (users) => {
                 setOnlineUsers(users || []);
-            }
+            },
         );
 
         const unsubUserOnline = chatSignalR.subscribe(
             "UserOnline",
             (userId) => {
                 setOnlineUsers((prev) =>
-                    prev.includes(userId) ? prev : [...prev, userId]
+                    prev.includes(userId) ? prev : [...prev, userId],
                 );
-            }
+            },
         );
 
         const unsubUserOffline = chatSignalR.subscribe(
             "UserOffline",
             (userId) => {
                 setOnlineUsers((prev) => prev.filter((id) => id !== userId));
-            }
+            },
         );
 
         return () => {
@@ -396,13 +428,17 @@ const Chat = () => {
                                     {chat.otherUserAvatar ? (
                                         <img
                                             src={chat.otherUserAvatar}
-                                            alt={chat.otherUserFullName}
+                                            alt={
+                                                chat.otherUserFullName ||
+                                                chat.otherUserName
+                                            }
                                             className="w-12 h-12 rounded-full object-cover"
                                         />
                                     ) : (
                                         <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white font-semibold">
                                             {getInitials(
-                                                chat.otherUserFullName
+                                                chat.otherUserFullName ||
+                                                    chat.otherUserName,
                                             )}
                                         </div>
                                     )}
@@ -413,7 +449,8 @@ const Chat = () => {
 
                                 <div className="flex-1 min-w-0">
                                     <div className="font-semibold text-gray-900 truncate">
-                                        {chat.otherUserFullName}
+                                        {chat.otherUserFullName ||
+                                            chat.otherUserName}
                                         {!chat.otherUserName && (
                                             <span className="text-red-500 text-xs ml-1">
                                                 (No username)
@@ -467,7 +504,7 @@ const Chat = () => {
                                         ) : (
                                             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white font-semibold">
                                                 {getInitials(
-                                                    selectedChat.otherUserFullName
+                                                    selectedChat.otherUserFullName,
                                                 )}
                                             </div>
                                         )}
@@ -478,7 +515,7 @@ const Chat = () => {
                                         </h3>
                                         <span className="text-sm text-green-500">
                                             {isUserOnline(
-                                                selectedChat.otherUserId
+                                                selectedChat.otherUserId,
                                             )
                                                 ? "Đang hoạt động"
                                                 : "Ngoại tuyến"}
@@ -530,12 +567,12 @@ const Chat = () => {
                                                         }`}
                                                     >
                                                         {formatTime(
-                                                            message.createdDate
+                                                            message.createdDate,
                                                         )}
                                                     </div>
                                                 </div>
                                             </div>
-                                        )
+                                        ),
                                     )
                                 ) : (
                                     <div className="flex items-center justify-center h-full">

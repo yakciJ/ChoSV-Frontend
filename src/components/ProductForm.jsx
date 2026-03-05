@@ -425,7 +425,7 @@ export default function ProductForm({ mode, productId }) {
                         {loading
                             ? "Đang xử lý..."
                             : mode === "create"
-                            ? "Đăng tin"
+                            ? "Đăng sản phẩm"
                             : "Cập nhật"}
                     </button>
                 </div>

@@ -44,3 +44,16 @@ export const deleteUser = async (userId) => {
     const response = await axiosInstance.delete(url + `admin/${userId}`);
     return response;
 };
+
+export const changePassword = async (
+    oldPassword,
+    newPassword,
+    confirmPassword,
+) => {
+    const response = await axiosInstance.put(url + `changePassword`, {
+        oldPassword,
+        newPassword,
+        confirmPassword,
+    });
+    return response;
+};

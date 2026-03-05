@@ -436,7 +436,7 @@ export default function Product() {
                             </div>
                         </div>
                         {/* chat nhanh */}
-                        <div className="mt-6 w-full flex items-center   ">
+                        {/* <div className="mt-6 w-full flex items-center   ">
                             <span className="text-lg font-semibold">
                                 Chat nhanh:
                             </span>
@@ -446,7 +446,7 @@ export default function Product() {
                             <button className="ml-4 bg-gray-200 text-black px-4 py-2 rounded-full hover:bg-blue-500 hover:text-white transition">
                                 Bạn có ship hàng không?
                             </button>
-                        </div>
+                        </div> */}
                     </div>
                 </div>
             </div>

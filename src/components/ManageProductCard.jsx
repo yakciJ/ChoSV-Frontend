@@ -97,7 +97,7 @@ export default function ManageProductCard({
                     to={`/edit-product/${product.productId}`}
                 >
                     <Edit3 />
-                    <p className="hidden lg:block mx-2">Sửa tin</p>
+                    <p className="hidden lg:block mx-2">Sửa sản phẩm</p>
                 </Link>
                 {canToggleStatus && (
                     <button

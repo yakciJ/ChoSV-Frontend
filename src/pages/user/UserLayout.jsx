@@ -348,13 +348,13 @@ export default function UserLayout() {
                             to="/product-management"
                             className="px-4 py-2 bg-gray-100 text-gray-800 rounded-3xl hover:bg-gray-200 transition whitespace-nowrap"
                         >
-                            Quản lý tin
+                            Quản lý sản phẩm
                         </Link>
                         <Link
                             to="/post-product"
                             className="px-4 py-2 bg-blue-500 text-white rounded-3xl hover:bg-blue-600 hover:text-white transition whitespace-nowrap"
                         >
-                            Đăng tin
+                            Đăng sản phẩm
                         </Link>
                     </div>
                     <div className="relative" ref={dropdownRef}>
@@ -404,7 +404,7 @@ export default function UserLayout() {
                                 >
                                     <div className="flex items-center gap-2">
                                         <Plus className="mr-1" />
-                                        <span>Đăng bài</span>
+                                        <span>Đăng sản phẩm</span>
                                     </div>
                                     <ChevronRight className="flex items-center flex-shrink-0" />
                                 </Link>
@@ -414,7 +414,7 @@ export default function UserLayout() {
                                 >
                                     <div className="flex items-center gap-2">
                                         <Store className="mr-1" />
-                                        <span>Bài đăng của tôi</span>
+                                        <span>Sản phẩm của tôi</span>
                                     </div>
                                     <ChevronRight className="flex items-center flex-shrink-0" />
                                 </Link>
@@ -428,7 +428,7 @@ export default function UserLayout() {
                                     </div>
                                     <ChevronRight className="flex items-center flex-shrink-0" />
                                 </Link>
-                                <Link
+                                {/* <Link
                                     to="/"
                                     className="flex items-center justify-between px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                                 >
@@ -437,7 +437,7 @@ export default function UserLayout() {
                                         <span>Lịch sử</span>
                                     </div>
                                     <ChevronRight className="flex items-center flex-shrink-0" />
-                                </Link>
+                                </Link> */}
                                 <button
                                     onClick={handleLogout}
                                     className="flex items-center justify-between w-full px-4 py-2 text-center text-sm bg-white text-gray-700 hover:bg-gray-100 border-none hover:text-red-500"

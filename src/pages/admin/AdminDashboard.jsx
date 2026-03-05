@@ -62,7 +62,7 @@ const AdminDashboard = () => {
                 reviewsResponse,
             ] = await Promise.all([
                 getAllUsers().catch(() => ({ items: [], totalCount: 0 })),
-                getAllProductsAdmin().catch(() => ({
+                getAllProductsAdmin(1, 1000).catch(() => ({
                     items: [],
                     totalCount: 0,
                 })),
@@ -97,7 +97,7 @@ const AdminDashboard = () => {
                     }
                     return acc;
                 },
-                { total: 0, pending: 0, approved: 0, rejected: 0 }
+                { total: 0, pending: 0, approved: 0, rejected: 0 },
             );
             const recentProducts = products.slice(0, 5);
 
@@ -116,7 +116,6 @@ const AdminDashboard = () => {
                 },
                 products: {
                     ...productStats,
-                    total: productsResponse.totalCount || products.length,
                     recent: recentProducts,
                 },
                 categories: {
@@ -356,7 +355,7 @@ const AdminDashboard = () => {
                                                                     user.userName
                                                                 )
                                                                     .charAt(0)
-                                                                    .toUpperCase()
+                                                                    .toUpperCase(),
                                                             );
                                                     }}
                                                 />
@@ -426,12 +425,12 @@ const AdminDashboard = () => {
                                         <span className="text-sm text-gray-500 ml-2">
                                             {product.createdDate
                                                 ? formatDateLocal(
-                                                      product.createdDate
+                                                      product.createdDate,
                                                   )
                                                 : "Không rõ"}
                                         </span>
                                     </div>
-                                )
+                                ),
                             )
                         ) : (
                             <p className="text-gray-500 text-center py-4">
